@@ -8,7 +8,10 @@
     "start": "next start",
     "lint": "next lint",
     "check-admin": "tsx scripts/check-admin-user.ts",
-    "create-admin": "tsx scripts/create-admin-user.ts"
+    "create-admin": "tsx scripts/create-admin-user.ts",
+    "db:create-simplified": "psql $DATABASE_URL -f scripts/02-create-simplified-tables.sql",
+    "import-cnpj": "tsx scripts/import-from-api.ts",
+    "migrate-data": "tsx scripts/migrate-existing-data.ts"
   },
   "dependencies": {
     "@auth/pg-adapter": "^1.9.1",
@@ -42,6 +45,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@supabase/supabase-js": "latest",
     "autoprefixer": "^10.4.20",
+    "axios": "^1.10.0",
     "bcryptjs": "^3.0.2",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
