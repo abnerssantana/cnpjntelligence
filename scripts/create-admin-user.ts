@@ -1,6 +1,11 @@
 import { Client } from 'pg'
 import bcrypt from 'bcryptjs'
 import * as readline from 'readline'
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+
+// Carregar variáveis de ambiente
+dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
 
 const rl = readline.createInterface({
   input: process.stdin,
@@ -16,7 +21,7 @@ function question(query: string): Promise<string> {
 async function createAdminUser() {
   const client = new Client({
     connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
-    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : { rejectUnauthorized: false }
   })
 
   try {

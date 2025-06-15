@@ -19,7 +19,7 @@ export const authOptions: NextAuthOptions = {
 
         const client = new Client({
           connectionString: process.env.POSTGRES_URL,
-          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
+          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : { rejectUnauthorized: false }
         })
 
         try {
