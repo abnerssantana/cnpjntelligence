@@ -44,7 +44,7 @@ export function HomePage() {
         states: 27,
         cities: 5570,
         cnaes: 1358,
-        lastUpdate: "Dezembro 2023",
+        lastUpdate: "2025",
       })
     }
     loadStats()
