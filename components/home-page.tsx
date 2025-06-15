@@ -31,21 +31,31 @@ export function HomePage() {
     cnaes: 0,
     lastUpdate: "",
   })
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Simulate loading global stats
+    // Load real stats from server action
     const loadStats = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setStats({
-        totalCompanies: 54789123,
-        activeCompanies: 41234567,
-        totalPartners: 28456789,
-        totalCapital: 2847000000000,
-        states: 27,
-        cities: 5570,
-        cnaes: 1358,
-        lastUpdate: "2025",
-      })
+      try {
+        const { getGlobalStats } = await import('@/app/dashboard/actions')
+        const data = await getGlobalStats()
+        setStats(data)
+      } catch (error) {
+        console.error('Error loading stats:', error)
+        // Use fallback data if error
+        setStats({
+          totalCompanies: 54789123,
+          activeCompanies: 41234567,
+          totalPartners: 28456789,
+          totalCapital: 2847000000000,
+          states: 27,
+          cities: 5570,
+          cnaes: 1358,
+          lastUpdate: "2025",
+        })
+      } finally {
+        setLoading(false)
+      }
     }
     loadStats()
   }, [])

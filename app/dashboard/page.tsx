@@ -1,59 +1,34 @@
-"use client"
-
-import { useState } from "react"
+import { Suspense } from "react"
+import { Metadata } from "next"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Badge } from "@/components/ui/badge"
 import { Building2 } from "lucide-react"
-import { CompanyFilters } from "@/components/company-filters"
-import { KPICards } from "@/components/kpi-cards"
-import { CompanyTable } from "@/components/company-table"
-import { CNAEAnalysis } from "@/components/cnae-analysis"
-import { GeographicAnalysis } from "@/components/geographic-analysis"
-import { TemporalAnalysis } from "@/components/temporal-analysis"
-import { PartnersAnalysis } from "@/components/partners-analysis"
-import { CapitalAnalysis } from "@/components/capital-analysis"
+import { DashboardContent } from "@/components/dashboard-content"
+import { DashboardFilters, getDashboardData } from "./actions"
 
-export default function Dashboard() {
-  const [filters, setFilters] = useState({
-    uf: "",
-    municipio: "",
-    porte: "",
-    situacao: "",
-    cnae: "",
-    natureza_juridica: "",
-  })
+export const metadata: Metadata = {
+  title: 'Dashboard | CNPJ Analytics',
+  description: 'Análise completa de dados empresariais do Brasil',
+}
 
-  const [kpis, setKPIs] = useState({
-    totalCompanies: 0,
-    activeCompanies: 0,
-    newCompanies: 0,
-    closedCompanies: 0,
-  })
+interface DashboardPageProps {
+  searchParams: DashboardFilters
+}
 
-  const [companies, setCompanies] = useState([])
-  const [loading, setLoading] = useState(false)
-
-  const handleFilterChange = (key: string, value: string) => {
-    setFilters((prev) => ({ ...prev, [key]: value }))
-  }
-
-  const searchCompanies = async () => {
-    setLoading(true)
-    try {
-      const response = await fetch("/api/companies/search", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(filters),
-      })
-      const data = await response.json()
-      setCompanies(data.companies)
-      setKPIs(data.kpis)
-    } catch (error) {
-      console.error("Error searching companies:", error)
-    } finally {
-      setLoading(false)
-    }
+export default async function Dashboard({ searchParams }: DashboardPageProps) {
+  // Parse search params with defaults
+  const filters: DashboardFilters = {
+    uf: searchParams.uf || "",
+    municipio: searchParams.municipio || "",
+    porte: searchParams.porte || "",
+    situacao: searchParams.situacao || "",
+    cnae: searchParams.cnae || "",
+    natureza_juridica: searchParams.natureza_juridica || "",
+    cnpj: searchParams.cnpj || "",
+    search: searchParams.search || "",
+    page: Number(searchParams.page) || 1,
+    limit: Number(searchParams.limit) || 50
   }
 
   return (
@@ -71,96 +46,38 @@ export default function Dashboard() {
       </div>
 
       <div className="container mx-auto px-4 py-6">
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-7">
-            <TabsTrigger value="overview">Visão Geral</TabsTrigger>
-            <TabsTrigger value="companies">Empresas</TabsTrigger>
-            <TabsTrigger value="cnae">Análise CNAE</TabsTrigger>
-            <TabsTrigger value="geographic">Análise Geográfica</TabsTrigger>
-            <TabsTrigger value="temporal">Análise Temporal</TabsTrigger>
-            <TabsTrigger value="partners">Análise de Sócios</TabsTrigger>
-            <TabsTrigger value="capital">Análise de Capital</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="overview" className="space-y-6">
-            <CompanyFilters
-              filters={filters}
-              onFilterChange={handleFilterChange}
-              onSearch={searchCompanies}
-              loading={loading}
-            />
-
-            <KPICards kpis={kpis} />
-
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Empresas por Porte</CardTitle>
-                  <CardDescription>Distribuição por tamanho da empresa</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    <div className="flex justify-between">
-                      <span>Micro Empresa</span>
-                      <span className="font-semibold">65%</span>
-                    </div>
-                    <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div className="bg-blue-600 h-2 rounded-full" style={{ width: "65%" }}></div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>Top CNAEs</CardTitle>
-                  <CardDescription>Atividades econômicas mais comuns</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Comércio Varejista</span>
-                      <Badge variant="secondary">1,234</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Serviços de TI</span>
-                      <Badge variant="secondary">987</Badge>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm">Consultoria</span>
-                      <Badge variant="secondary">756</Badge>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </TabsContent>
-
-          <TabsContent value="companies">
-            <CompanyTable companies={companies} loading={loading} />
-          </TabsContent>
-
-          <TabsContent value="cnae">
-            <CNAEAnalysis filters={filters} />
-          </TabsContent>
-
-          <TabsContent value="geographic">
-            <GeographicAnalysis filters={filters} />
-          </TabsContent>
-
-          <TabsContent value="temporal">
-            <TemporalAnalysis filters={filters} />
-          </TabsContent>
-
-          <TabsContent value="partners">
-            <PartnersAnalysis filters={filters} />
-          </TabsContent>
-
-          <TabsContent value="capital">
-            <CapitalAnalysis filters={filters} />
-          </TabsContent>
-        </Tabs>
+        <Suspense fallback={<DashboardSkeleton />}>
+          <DashboardContent filters={filters} />
+        </Suspense>
       </div>
+    </div>
+  )
+}
+
+function DashboardSkeleton() {
+  return (
+    <div className="space-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        {[...Array(4)].map((_, i) => (
+          <Card key={i}>
+            <CardHeader>
+              <div className="h-4 bg-gray-200 rounded animate-pulse w-1/2"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-8 bg-gray-200 rounded animate-pulse"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+      <Card>
+        <CardContent className="p-6">
+          <div className="space-y-4">
+            {[...Array(5)].map((_, i) => (
+              <div key={i} className="h-12 bg-gray-200 rounded animate-pulse"></div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

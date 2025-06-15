@@ -1,135 +1,86 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { TreePine, Users, Network, Search, ExternalLink } from "lucide-react"
+import { Users, UserCheck, Building2, Network } from "lucide-react"
 
 interface PartnersAnalysisProps {
   filters: any
 }
 
 export function PartnersAnalysis({ filters }: PartnersAnalysisProps) {
-  const [searchCPF, setSearchCPF] = useState("")
-  const [partnerNetworks, setPartnerNetworks] = useState([])
-  const [commonPartners, setCommonPartners] = useState([])
-  const [partnerStats, setPartnerStats] = useState({})
-  const [loading, setLoading] = useState(false)
-
-  // Mock data for demonstration
-  const mockPartnerNetworks = [
-    {
-      cpf: "123.456.789-01",
-      nome: "João Silva Santos",
-      empresas: 5,
-      totalCapital: 2500000,
-      setores: ["Tecnologia", "Consultoria", "Comércio"],
-      risco: "Baixo",
-    },
-    {
-      cpf: "987.654.321-09",
-      nome: "Maria Oliveira Costa",
-      empresas: 3,
-      totalCapital: 1800000,
-      setores: ["Saúde", "Educação"],
-      risco: "Médio",
-    },
-    {
-      cpf: "456.789.123-45",
-      nome: "Carlos Eduardo Lima",
-      empresas: 8,
-      totalCapital: 4200000,
-      setores: ["Construção", "Imobiliário", "Logística"],
-      risco: "Alto",
-    },
-  ]
-
-  const mockCommonPartners = [
-    {
-      empresa1: "Tech Solutions LTDA",
-      cnpj1: "12.345.678/0001-90",
-      empresa2: "Digital Services LTDA",
-      cnpj2: "98.765.432/0001-10",
-      sociosComuns: 2,
-      socios: ["João Silva Santos", "Ana Paula Rocha"],
-      relacao: "Grupo Empresarial",
-    },
-    {
-      empresa1: "Consultoria ABC LTDA",
-      cnpj1: "11.222.333/0001-44",
-      empresa2: "Serviços XYZ LTDA",
-      cnpj2: "55.666.777/0001-88",
-      sociosComuns: 1,
-      socios: ["Maria Oliveira Costa"],
-      relacao: "Sócio em Comum",
-    },
-  ]
-
-  const mockPartnerStats = {
-    totalPartners: 15847,
-    multipleCompanies: 3421,
-    averageCompaniesPerPartner: 1.8,
-    topPartnerCompanies: 12,
-  }
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<any>({
+    topPartners: [],
+    partnerTypes: [],
+    businessGroups: []
+  })
 
   useEffect(() => {
-    loadPartnersAnalysis()
+    loadPartnersData()
   }, [filters])
 
-  const loadPartnersAnalysis = async () => {
-    setLoading(true)
+  const loadPartnersData = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setPartnerNetworks(mockPartnerNetworks)
-      setCommonPartners(mockCommonPartners)
-      setPartnerStats(mockPartnerStats)
+      setLoading(true)
+      // Mock data - replace with server action
+      setData({
+        topPartners: [
+          { name: 'João Silva', cpf: '***.***.***-01', companies: 15, totalCapital: 5000000 },
+          { name: 'Maria Santos', cpf: '***.***.***-02', companies: 12, totalCapital: 3500000 },
+          { name: 'Pedro Oliveira', cpf: '***.***.***-03', companies: 10, totalCapital: 2800000 },
+          { name: 'Ana Costa', cpf: '***.***.***-04', companies: 8, totalCapital: 2200000 },
+          { name: 'Carlos Ferreira', cpf: '***.***.***-05', companies: 7, totalCapital: 1900000 }
+        ],
+        partnerTypes: [
+          { type: 'Pessoa Física', count: 234567, percentage: 78.5 },
+          { type: 'Pessoa Jurídica', count: 64321, percentage: 21.5 }
+        ],
+        businessGroups: [
+          { 
+            groupName: 'Grupo ABC', 
+            companies: 25, 
+            totalRevenue: 150000000,
+            sectors: ['Varejo', 'Tecnologia', 'Serviços']
+          },
+          { 
+            groupName: 'Holding XYZ', 
+            companies: 18, 
+            totalRevenue: 98000000,
+            sectors: ['Indústria', 'Logística']
+          },
+          { 
+            groupName: 'Conglomerado 123', 
+            companies: 15, 
+            totalRevenue: 75000000,
+            sectors: ['Construção', 'Imobiliário']
+          }
+        ]
+      })
     } catch (error) {
-      console.error("Error loading partners analysis:", error)
+      console.error('Error loading partners data:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const searchPartnerByCPF = async () => {
-    if (!searchCPF) return
-    setLoading(true)
-    try {
-      // Simulate API call to search partner by CPF
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      console.log("Searching partner:", searchCPF)
-    } catch (error) {
-      console.error("Error searching partner:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const getRiscoColor = (risco: string) => {
-    const colors = {
-      Baixo: "default",
-      Médio: "secondary",
-      Alto: "destructive",
-    }
-    return colors[risco as keyof typeof colors] || "outline"
   }
 
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      notation: 'compact',
+      maximumFractionDigits: 1
     }).format(value)
   }
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="space-y-6">
+        {[...Array(3)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <CardContent className="p-6">
+              <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
             </CardContent>
           </Card>
         ))}
@@ -139,123 +90,38 @@ export function PartnersAnalysis({ filters }: PartnersAnalysisProps) {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="text-2xl font-bold">Análise de Sócios</h2>
-        <p className="text-muted-foreground">Identificação de redes empresariais e sócios em comum</p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Total de Sócios</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">{partnerStats.totalPartners?.toLocaleString("pt-BR")}</div>
-            <p className="text-xs text-muted-foreground">Sócios únicos identificados</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Múltiplas Empresas</CardTitle>
-            <Network className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">
-              {partnerStats.multipleCompanies?.toLocaleString("pt-BR")}
-            </div>
-            <p className="text-xs text-muted-foreground">Sócios com 2+ empresas</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Média por Sócio</CardTitle>
-            <TreePine className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{partnerStats.averageCompaniesPerPartner}</div>
-            <p className="text-xs text-muted-foreground">Empresas por sócio</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Maior Rede</CardTitle>
-            <Network className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{partnerStats.topPartnerCompanies}</div>
-            <p className="text-xs text-muted-foreground">Empresas do maior investidor</p>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Top Partners */}
       <Card>
         <CardHeader>
-          <CardTitle>Busca por CPF</CardTitle>
-          <CardDescription>Pesquise um sócio específico para ver suas empresas</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex gap-2">
-            <Input
-              placeholder="Digite o CPF (000.000.000-00)"
-              value={searchCPF}
-              onChange={(e) => setSearchCPF(e.target.value)}
-              className="max-w-sm"
-            />
-            <Button onClick={searchPartnerByCPF} disabled={loading}>
-              <Search className="h-4 w-4 mr-2" />
-              Buscar
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Principais Redes Empresariais</CardTitle>
-          <CardDescription>Sócios com maior número de empresas e capital investido</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <Users className="h-5 w-5" />
+            Principais Sócios
+          </CardTitle>
+          <CardDescription>
+            Sócios com maior número de empresas
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {partnerNetworks.map((partner: any, index) => (
-              <div key={index} className="p-4 border rounded-lg">
-                <div className="flex items-start justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold">{partner.nome}</h3>
-                    <p className="text-sm text-muted-foreground font-mono">{partner.cpf}</p>
-                  </div>
-                  <Badge variant={getRiscoColor(partner.risco) as any}>Risco {partner.risco}</Badge>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <p className="text-sm font-medium">Empresas</p>
-                    <p className="text-2xl font-bold text-blue-600">{partner.empresas}</p>
+            {data.topPartners.map((partner: any, index: number) => (
+              <div key={partner.cpf} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-blue-600">#{index + 1}</span>
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Capital Total</p>
-                    <p className="text-lg font-semibold text-green-600">{formatCurrency(partner.totalCapital)}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium">Setores</p>
-                    <div className="flex flex-wrap gap-1 mt-1">
-                      {partner.setores.map((setor: string, i: number) => (
-                        <Badge key={i} variant="outline" className="text-xs">
-                          {setor}
-                        </Badge>
-                      ))}
-                    </div>
+                    <p className="font-medium">{partner.name}</p>
+                    <p className="text-sm text-muted-foreground">CPF: {partner.cpf}</p>
                   </div>
                 </div>
-
-                <div className="flex justify-end mt-3">
-                  <Button variant="outline" size="sm">
-                    <ExternalLink className="h-4 w-4 mr-2" />
-                    Ver Detalhes
-                  </Button>
+                <div className="text-right">
+                  <div className="flex items-center gap-2 justify-end">
+                    <Building2 className="h-4 w-4 text-gray-500" />
+                    <span className="font-medium">{partner.companies} empresas</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Capital: {formatCurrency(partner.totalCapital)}
+                  </p>
                 </div>
               </div>
             ))}
@@ -263,128 +129,72 @@ export function PartnersAnalysis({ filters }: PartnersAnalysisProps) {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Empresas com Sócios em Comum</CardTitle>
-          <CardDescription>Identificação de possíveis grupos empresariais</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Empresa 1</TableHead>
-                <TableHead>Empresa 2</TableHead>
-                <TableHead>Sócios Comuns</TableHead>
-                <TableHead>Nomes dos Sócios</TableHead>
-                <TableHead>Tipo de Relação</TableHead>
-                <TableHead>Ações</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {commonPartners.map((relation: any, index) => (
-                <TableRow key={index}>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{relation.empresa1}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{relation.cnpj1}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <div>
-                      <p className="font-medium">{relation.empresa2}</p>
-                      <p className="text-xs text-muted-foreground font-mono">{relation.cnpj2}</p>
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="secondary">{relation.sociosComuns}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <div className="space-y-1">
-                      {relation.socios.map((socio: string, i: number) => (
-                        <p key={i} className="text-sm">
-                          {socio}
-                        </p>
-                      ))}
-                    </div>
-                  </TableCell>
-                  <TableCell>
-                    <Badge variant="outline">{relation.relacao}</Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button variant="ghost" size="sm">
-                      <ExternalLink className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
-
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Partner Types */}
         <Card>
           <CardHeader>
-            <CardTitle>Insights de Sócios</CardTitle>
-            <CardDescription>Principais descobertas da análise</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <UserCheck className="h-5 w-5" />
+              Tipos de Sócios
+            </CardTitle>
+            <CardDescription>
+              Distribuição por tipo de pessoa
+            </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-red-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Concentração de Poder</p>
-                  <p className="text-sm text-muted-foreground">Top 100 sócios controlam 23% do capital total</p>
+              {data.partnerTypes.map((type: any) => (
+                <div key={type.type} className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium">{type.type}</span>
+                    <div className="text-right">
+                      <Badge variant="secondary">{type.count.toLocaleString('pt-BR')}</Badge>
+                      <p className="text-sm text-muted-foreground mt-1">{type.percentage}%</p>
+                    </div>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-blue-600 h-3 rounded-full transition-all duration-500" 
+                      style={{ width: `${type.percentage}%` }}
+                    />
+                  </div>
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Grupos Empresariais</p>
-                  <p className="text-sm text-muted-foreground">Identificados 847 possíveis grupos com sócios comuns</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Diversificação</p>
-                  <p className="text-sm text-muted-foreground">
-                    Sócios com múltiplas empresas tendem a diversificar setores
-                  </p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
 
+        {/* Business Groups */}
         <Card>
           <CardHeader>
-            <CardTitle>Alertas de Compliance</CardTitle>
-            <CardDescription>Situações que merecem atenção</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <Network className="h-5 w-5" />
+              Grupos Empresariais
+            </CardTitle>
+            <CardDescription>
+              Principais grupos identificados
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="p-3 bg-red-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 bg-red-500 rounded-full"></div>
-                  <span className="font-medium text-red-900">Alto Risco</span>
+            <div className="space-y-3">
+              {data.businessGroups.map((group: any) => (
+                <div key={group.groupName} className="p-4 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">{group.groupName}</p>
+                    <Badge>{group.companies} empresas</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-2">
+                    Receita: {formatCurrency(group.totalRevenue)}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {group.sectors.map((sector: string) => (
+                      <Badge key={sector} variant="outline" className="text-xs">
+                        {sector}
+                      </Badge>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-sm text-red-700">23 sócios com mais de 10 empresas cada</p>
-              </div>
-              <div className="p-3 bg-orange-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 bg-orange-500 rounded-full"></div>
-                  <span className="font-medium text-orange-900">Atenção</span>
-                </div>
-                <p className="text-sm text-orange-700">156 empresas com mesmo endereço e sócios comuns</p>
-              </div>
-              <div className="p-3 bg-yellow-50 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                  <span className="font-medium text-yellow-900">Monitoramento</span>
-                </div>
-                <p className="text-sm text-yellow-700">89 sócios com empresas em setores não relacionados</p>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>

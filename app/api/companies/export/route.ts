@@ -1,98 +1,141 @@
-import { type NextRequest, NextResponse } from "next/server"
-import { createClient } from "@supabase/supabase-js"
-import * as XLSX from "xlsx"
-
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!)
+import { NextRequest, NextResponse } from 'next/server'
+import { supabaseServer } from '@/lib/supabaseServer'
+import * as XLSX from 'xlsx'
 
 export async function POST(request: NextRequest) {
   try {
     const filters = await request.json()
-
-    let query = supabase
-      .from("establishments")
+    
+    // Build query
+    let query = supabaseServer
+      .from('establishments')
       .select(`
-        cnpj_completo,
-        companies!inner(razao_social, porte_empresa, natureza_juridica),
-        nome_fantasia,
-        situacao_cadastral,
-        uf,
-        municipio,
-        cnae_fiscal_principal,
-        logradouro,
-        numero,
-        bairro,
-        cep,
-        correio_eletronico
+        *,
+        companies!inner(
+          razao_social,
+          natureza_juridica,
+          capital_social,
+          porte_empresa
+        ),
+        municipalities(descricao),
+        cnaes!cnae_fiscal_principal(descricao)
       `)
-      .limit(10000) // Limit for export
+      .limit(10000) // Limit export to 10k records
 
-    // Apply same filters as search
-    if (filters.uf) query = query.eq("uf", filters.uf)
-    if (filters.municipio) query = query.eq("municipio", filters.municipio)
-    if (filters.situacao) query = query.eq("situacao_cadastral", filters.situacao)
-    if (filters.cnae) query = query.eq("cnae_fiscal_principal", filters.cnae)
-    if (filters.porte) query = query.eq("companies.porte_empresa", filters.porte)
+    // Apply filters
+    if (filters.uf) {
+      query = query.eq('uf', filters.uf)
+    }
+    if (filters.municipio) {
+      query = query.eq('municipio', filters.municipio)
+    }
+    if (filters.situacao) {
+      query = query.eq('situacao_cadastral', filters.situacao)
+    }
+    if (filters.cnae) {
+      query = query.eq('cnae_fiscal_principal', filters.cnae)
+    }
+    if (filters.porte && filters.porte !== 'all') {
+      query = query.eq('companies.porte_empresa', filters.porte)
+    }
+    if (filters.cnpj) {
+      const cnpjClean = filters.cnpj.replace(/\D/g, '')
+      query = query.like('cnpj_completo', `%${cnpjClean}%`)
+    }
+    if (filters.search) {
+      query = query.or(`companies.razao_social.ilike.%${filters.search}%,nome_fantasia.ilike.%${filters.search}%`)
+    }
 
     const { data: companies, error } = await query
 
     if (error) {
-      return NextResponse.json({ error: "Database error" }, { status: 500 })
+      throw new Error(error.message)
     }
 
-    // Format data for Excel
-    const excelData =
-      companies?.map((company) => ({
-        CNPJ: company.cnpj_completo,
-        "Razão Social": company.companies?.razao_social,
-        "Nome Fantasia": company.nome_fantasia,
-        Situação: getSituacaoLabel(company.situacao_cadastral),
-        Porte: getPorteLabel(company.companies?.porte_empresa),
-        UF: company.uf,
-        Município: company.municipio,
-        "CNAE Principal": company.cnae_fiscal_principal,
-        Endereço: `${company.logradouro}, ${company.numero}`,
-        Bairro: company.bairro,
-        CEP: company.cep,
-        Email: company.correio_eletronico,
-      })) || []
+    // Format data for export
+    const exportData = companies?.map(company => ({
+      'CNPJ': formatCNPJ(company.cnpj_completo),
+      'Razão Social': company.companies?.razao_social || '',
+      'Nome Fantasia': company.nome_fantasia || '',
+      'Situação Cadastral': getSituacaoLabel(company.situacao_cadastral),
+      'Data Situação': formatDate(company.data_situacao_cadastral),
+      'Porte': getPorteLabel(company.companies?.porte_empresa),
+      'Capital Social': company.companies?.capital_social || 0,
+      'CNAE Principal': company.cnae_fiscal_principal,
+      'Descrição CNAE': company.cnaes?.descricao || '',
+      'Logradouro': `${company.tipo_logradouro || ''} ${company.logradouro || ''}`.trim(),
+      'Número': company.numero || '',
+      'Complemento': company.complemento || '',
+      'Bairro': company.bairro || '',
+      'CEP': formatCEP(company.cep),
+      'Município': company.municipalities?.descricao || '',
+      'UF': company.uf || '',
+      'Telefone': formatPhone(company.ddd1, company.telefone1),
+      'Email': company.correio_eletronico || '',
+      'Data Início Atividade': formatDate(company.data_inicio_atividade)
+    })) || []
 
-    // Create Excel workbook
+    // Create workbook
+    const ws = XLSX.utils.json_to_sheet(exportData)
     const wb = XLSX.utils.book_new()
-    const ws = XLSX.utils.json_to_sheet(excelData)
-    XLSX.utils.book_append_sheet(wb, ws, "Empresas")
+    XLSX.utils.book_append_sheet(wb, ws, 'Empresas')
 
     // Generate buffer
-    const buffer = XLSX.write(wb, { type: "buffer", bookType: "xlsx" })
+    const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
 
-    return new NextResponse(buffer, {
+    // Return file
+    return new NextResponse(buf, {
       headers: {
-        "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-        "Content-Disposition": "attachment; filename=cnpj-data.xlsx",
-      },
+        'Content-Type': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        'Content-Disposition': `attachment; filename="cnpj-export-${new Date().toISOString().split('T')[0]}.xlsx"`
+      }
     })
   } catch (error) {
-    console.error("Export error:", error)
-    return NextResponse.json({ error: "Export failed" }, { status: 500 })
+    console.error('Export error:', error)
+    return NextResponse.json(
+      { error: 'Failed to export data' },
+      { status: 500 }
+    )
   }
 }
 
-function getSituacaoLabel(situacao: number): string {
-  const situacoes: { [key: number]: string } = {
-    1: "Nula",
-    2: "Ativa",
-    3: "Suspensa",
-    4: "Inapta",
-    8: "Baixada",
-  }
-  return situacoes[situacao] || "Desconhecida"
+function formatCNPJ(cnpj: string) {
+  if (!cnpj || cnpj.length !== 14) return cnpj
+  return cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5')
 }
 
-function getPorteLabel(porte: number): string {
-  const portes: { [key: number]: string } = {
-    0: "Não Informado",
-    1: "Micro Empresa",
-    3: "Pequeno Porte",
-    5: "Demais",
+function formatCEP(cep: string) {
+  if (!cep || cep.length !== 8) return cep
+  return cep.replace(/(\d{5})(\d{3})/, '$1-$2')
+}
+
+function formatPhone(ddd: string, phone: string) {
+  if (!ddd || !phone) return ''
+  return `(${ddd}) ${phone}`
+}
+
+function formatDate(date: string) {
+  if (!date) return ''
+  return new Date(date).toLocaleDateString('pt-BR')
+}
+
+function getSituacaoLabel(situacao: number) {
+  const situacoes: Record<number, string> = {
+    1: 'Nula',
+    2: 'Ativa',
+    3: 'Suspensa',
+    4: 'Inapta',
+    8: 'Baixada'
   }
-  return portes[porte] || "Não Informado"
+  return situacoes[situacao] || 'Desconhecida'
+}
+
+function getPorteLabel(porte: number) {
+  const portes: Record<number, string> = {
+    0: 'Não Informado',
+    1: 'Micro Empresa',
+    3: 'Pequeno Porte',
+    5: 'Demais'
+  }
+  return portes[porte] || 'Não Informado'
 }

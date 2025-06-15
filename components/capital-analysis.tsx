@@ -1,99 +1,85 @@
-"use client"
+'use client'
 
-import { useState, useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, ResponsiveContainer } from "recharts"
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart"
-import { DollarSign, TrendingUp, PieChartIcon, BarChart3 } from "lucide-react"
+import { DollarSign, TrendingUp, BarChart3, PieChart } from "lucide-react"
 
 interface CapitalAnalysisProps {
   filters: any
 }
 
 export function CapitalAnalysis({ filters }: CapitalAnalysisProps) {
-  const [analysisType, setAnalysisType] = useState("distribution")
-  const [capitalDistribution, setCapitalDistribution] = useState([])
-  const [sectorCapital, setSectorCapital] = useState([])
-  const [capitalEvolution, setCapitalEvolution] = useState([])
-  const [capitalStats, setCapitalStats] = useState({})
-  const [loading, setLoading] = useState(false)
-
-  // Mock data for demonstration
-  const mockCapitalDistribution = [
-    { faixa: "Até R$ 10k", count: 45678, percentage: 65.2, totalCapital: 234567890 },
-    { faixa: "R$ 10k - R$ 100k", count: 15432, percentage: 22.0, totalCapital: 567890123 },
-    { faixa: "R$ 100k - R$ 1M", count: 6789, percentage: 9.7, totalCapital: 2345678901 },
-    { faixa: "R$ 1M - R$ 10M", count: 1876, percentage: 2.7, totalCapital: 8901234567 },
-    { faixa: "R$ 10M+", count: 298, percentage: 0.4, totalCapital: 15678901234 },
-  ]
-
-  const mockSectorCapital = [
-    { setor: "Tecnologia", avgCapital: 850000, medianCapital: 250000, companies: 1234, color: "#3b82f6" },
-    { setor: "Saúde", avgCapital: 1200000, medianCapital: 400000, companies: 987, color: "#ef4444" },
-    { setor: "Educação", avgCapital: 320000, medianCapital: 150000, companies: 756, color: "#22c55e" },
-    { setor: "Comércio", avgCapital: 180000, medianCapital: 80000, companies: 2345, color: "#f59e0b" },
-    { setor: "Serviços", avgCapital: 95000, medianCapital: 45000, companies: 3456, color: "#8b5cf6" },
-  ]
-
-  const mockCapitalEvolution = [
-    { year: "2019", avgCapital: 145000, totalCapital: 12500000000 },
-    { year: "2020", avgCapital: 132000, totalCapital: 11800000000 },
-    { year: "2021", avgCapital: 156000, totalCapital: 14200000000 },
-    { year: "2022", avgCapital: 178000, totalCapital: 16800000000 },
-    { year: "2023", avgCapital: 195000, totalCapital: 18900000000 },
-  ]
-
-  const mockCapitalStats = {
-    totalCapital: 189000000000,
-    averageCapital: 195000,
-    medianCapital: 50000,
-    companiesWithCapital: 97.3,
-    topCompanyCapital: 500000000,
-  }
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState<any>({
+    capitalDistribution: [],
+    topCompanies: [],
+    sectorCapital: [],
+    capitalGrowth: []
+  })
 
   useEffect(() => {
-    loadCapitalAnalysis()
-  }, [filters, analysisType])
+    loadCapitalData()
+  }, [filters])
 
-  const loadCapitalAnalysis = async () => {
-    setLoading(true)
+  const loadCapitalData = async () => {
     try {
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-      setCapitalDistribution(mockCapitalDistribution)
-      setSectorCapital(mockSectorCapital)
-      setCapitalEvolution(mockCapitalEvolution)
-      setCapitalStats(mockCapitalStats)
+      setLoading(true)
+      // Mock data - replace with server action
+      setData({
+        capitalDistribution: [
+          { range: 'Até R$ 10k', count: 234567, percentage: 45.2 },
+          { range: 'R$ 10k - R$ 50k', count: 156789, percentage: 30.3 },
+          { range: 'R$ 50k - R$ 100k', count: 67890, percentage: 13.1 },
+          { range: 'R$ 100k - R$ 500k', count: 45678, percentage: 8.8 },
+          { range: 'R$ 500k - R$ 1M', count: 12345, percentage: 2.4 },
+          { range: 'Acima de R$ 1M', count: 1234, percentage: 0.2 }
+        ],
+        topCompanies: [
+          { name: 'Empresa ABC Ltda', capital: 50000000, cnpj: '12.345.678/0001-90' },
+          { name: 'Indústria XYZ S.A.', capital: 35000000, cnpj: '98.765.432/0001-10' },
+          { name: 'Comércio 123 Eireli', capital: 25000000, cnpj: '11.222.333/0001-44' },
+          { name: 'Serviços QWE Ltda', capital: 18000000, cnpj: '55.666.777/0001-88' },
+          { name: 'Tecnologia RTY S.A.', capital: 15000000, cnpj: '99.888.777/0001-66' }
+        ],
+        sectorCapital: [
+          { sector: 'Indústria', total: 2500000000, average: 850000 },
+          { sector: 'Comércio', total: 1800000000, average: 250000 },
+          { sector: 'Serviços', total: 1200000000, average: 180000 },
+          { sector: 'Tecnologia', total: 950000000, average: 450000 },
+          { sector: 'Construção', total: 750000000, average: 320000 }
+        ],
+        capitalGrowth: [
+          { year: 2020, total: 4500000000, growth: 0 },
+          { year: 2021, total: 5200000000, growth: 15.6 },
+          { year: 2022, total: 6100000000, growth: 17.3 },
+          { year: 2023, total: 7300000000, growth: 19.7 },
+          { year: 2024, total: 8500000000, growth: 16.4 }
+        ]
+      })
     } catch (error) {
-      console.error("Error loading capital analysis:", error)
+      console.error('Error loading capital data:', error)
     } finally {
       setLoading(false)
     }
   }
 
   const formatCurrency = (value: number) => {
-    if (value >= 1000000000) {
-      return `R$ ${(value / 1000000000).toFixed(1)}B`
-    } else if (value >= 1000000) {
-      return `R$ ${(value / 1000000).toFixed(1)}M`
-    } else if (value >= 1000) {
-      return `R$ ${(value / 1000).toFixed(0)}k`
-    }
-    return new Intl.NumberFormat("pt-BR", {
-      style: "currency",
-      currency: "BRL",
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL',
+      notation: 'compact',
+      maximumFractionDigits: 1
     }).format(value)
   }
 
   if (loading) {
     return (
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {[1, 2, 3, 4].map((i) => (
+      <div className="space-y-6">
+        {[...Array(3)].map((_, i) => (
           <Card key={i}>
-            <CardContent className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+            <CardContent className="p-6">
+              <div className="h-64 bg-gray-200 rounded animate-pulse"></div>
             </CardContent>
           </Card>
         ))}
@@ -103,157 +89,67 @@ export function CapitalAnalysis({ filters }: CapitalAnalysisProps) {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Análise de Capital Social</h2>
-          <p className="text-muted-foreground">Distribuição e análise do capital investido nas empresas</p>
-        </div>
-        <Select value={analysisType} onValueChange={setAnalysisType}>
-          <SelectTrigger className="w-48">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="distribution">Distribuição</SelectItem>
-            <SelectItem value="sectors">Por Setor</SelectItem>
-            <SelectItem value="evolution">Evolução</SelectItem>
-            <SelectItem value="comparison">Comparação</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Capital Total</CardTitle>
-            <DollarSign className="h-4 w-4 text-green-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-green-600">{formatCurrency(capitalStats.totalCapital)}</div>
-            <p className="text-xs text-muted-foreground">Soma de todo capital social</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Capital Médio</CardTitle>
-            <BarChart3 className="h-4 w-4 text-blue-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-blue-600">{formatCurrency(capitalStats.averageCapital)}</div>
-            <p className="text-xs text-muted-foreground">Média por empresa</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Capital Mediano</CardTitle>
-            <PieChartIcon className="h-4 w-4 text-purple-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-purple-600">{formatCurrency(capitalStats.medianCapital)}</div>
-            <p className="text-xs text-muted-foreground">Valor mediano</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Com Capital</CardTitle>
-            <TrendingUp className="h-4 w-4 text-orange-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-orange-600">{capitalStats.companiesWithCapital}%</div>
-            <p className="text-xs text-muted-foreground">Empresas com capital informado</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Maior Capital</CardTitle>
-            <DollarSign className="h-4 w-4 text-red-600" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-red-600">{formatCurrency(capitalStats.topCompanyCapital)}</div>
-            <p className="text-xs text-muted-foreground">Maior capital individual</p>
-          </CardContent>
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Distribuição por Faixa de Capital</CardTitle>
-            <CardDescription>Quantidade de empresas por faixa de capital social</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                count: { label: "Empresas", color: "hsl(var(--chart-1))" },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={capitalDistribution}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="faixa" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Capital por Setor</CardTitle>
-            <CardDescription>Capital médio e mediano por setor econômico</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ChartContainer
-              config={{
-                avgCapital: { label: "Capital Médio", color: "hsl(var(--chart-1))" },
-                medianCapital: { label: "Capital Mediano", color: "hsl(var(--chart-2))" },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={sectorCapital}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="setor" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="avgCapital" fill="var(--color-avgCapital)" />
-                  <Bar dataKey="medianCapital" fill="var(--color-medianCapital)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
-          </CardContent>
-        </Card>
-      </div>
-
+      {/* Capital Distribution */}
       <Card>
         <CardHeader>
-          <CardTitle>Detalhamento por Faixa de Capital</CardTitle>
-          <CardDescription>Análise detalhada da distribuição de capital</CardDescription>
+          <CardTitle className="flex items-center gap-2">
+            <PieChart className="h-5 w-5" />
+            Distribuição de Capital Social
+          </CardTitle>
+          <CardDescription>
+            Faixas de capital social das empresas
+          </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {capitalDistribution.map((faixa: any, index) => (
-              <div key={index} className="p-4 border rounded-lg">
-                <div className="flex items-center justify-between mb-3">
-                  <div>
-                    <h3 className="font-semibold">{faixa.faixa}</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {faixa.count.toLocaleString("pt-BR")} empresas ({faixa.percentage}%)
-                    </p>
-                  </div>
+            {data.capitalDistribution.map((range: any) => (
+              <div key={range.range} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="font-medium">{range.range}</span>
                   <div className="text-right">
-                    <p className="font-semibold text-green-600">{formatCurrency(faixa.totalCapital)}</p>
-                    <p className="text-sm text-muted-foreground">Capital total</p>
+                    <Badge variant="secondary">{range.count.toLocaleString('pt-BR')}</Badge>
+                    <p className="text-sm text-muted-foreground mt-1">{range.percentage}%</p>
                   </div>
                 </div>
-                <Progress value={faixa.percentage} className="h-2" />
+                <div className="w-full bg-gray-200 rounded-full h-2">
+                  <div 
+                    className="bg-green-600 h-2 rounded-full transition-all duration-500" 
+                    style={{ width: `${range.percentage}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Top Companies by Capital */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <DollarSign className="h-5 w-5" />
+            Maiores Capitais Sociais
+          </CardTitle>
+          <CardDescription>
+            Empresas com maior capital social registrado
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {data.topCompanies.map((company: any, index: number) => (
+              <div key={company.cnpj} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                <div className="flex items-center gap-4">
+                  <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
+                    <span className="font-bold text-green-600">#{index + 1}</span>
+                  </div>
+                  <div>
+                    <p className="font-medium">{company.name}</p>
+                    <p className="text-sm text-muted-foreground">CNPJ: {company.cnpj}</p>
+                  </div>
+                </div>
+                <Badge variant="default" className="text-base">
+                  {formatCurrency(company.capital)}
+                </Badge>
               </div>
             ))}
           </div>
@@ -261,101 +157,67 @@ export function CapitalAnalysis({ filters }: CapitalAnalysisProps) {
       </Card>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Sector Capital */}
         <Card>
           <CardHeader>
-            <CardTitle>Evolução do Capital</CardTitle>
-            <CardDescription>Crescimento do capital social ao longo dos anos</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <BarChart3 className="h-5 w-5" />
+              Capital por Setor
+            </CardTitle>
+            <CardDescription>
+              Total e média de capital por setor
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <ChartContainer
-              config={{
-                avgCapital: { label: "Capital Médio", color: "hsl(var(--chart-1))" },
-                totalCapital: { label: "Capital Total", color: "hsl(var(--chart-2))" },
-              }}
-              className="h-[300px]"
-            >
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={capitalEvolution}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="year" />
-                  <YAxis />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <Bar dataKey="avgCapital" fill="var(--color-avgCapital)" />
-                </BarChart>
-              </ResponsiveContainer>
-            </ChartContainer>
+            <div className="space-y-3">
+              {data.sectorCapital.map((sector: any) => (
+                <div key={sector.sector} className="p-3 border rounded-lg">
+                  <div className="flex items-center justify-between mb-2">
+                    <p className="font-medium">{sector.sector}</p>
+                    <Badge variant="outline">{formatCurrency(sector.total)}</Badge>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Média por empresa: {formatCurrency(sector.average)}
+                  </p>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
+        {/* Capital Growth */}
         <Card>
           <CardHeader>
-            <CardTitle>Insights de Capital</CardTitle>
-            <CardDescription>Principais descobertas da análise</CardDescription>
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5" />
+              Evolução do Capital Total
+            </CardTitle>
+            <CardDescription>
+              Crescimento anual do capital social total
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Concentração</p>
-                  <p className="text-sm text-muted-foreground">65% das empresas têm capital até R$ 10k</p>
+            <div className="space-y-3">
+              {data.capitalGrowth.map((year: any) => (
+                <div key={year.year} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                  <div>
+                    <p className="font-medium">{year.year}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {formatCurrency(year.total)}
+                    </p>
+                  </div>
+                  {year.growth > 0 && (
+                    <div className="flex items-center gap-1 text-green-600">
+                      <TrendingUp className="h-4 w-4" />
+                      <span className="font-semibold">+{year.growth}%</span>
+                    </div>
+                  )}
                 </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Setor Premium</p>
-                  <p className="text-sm text-muted-foreground">Saúde tem o maior capital médio (R$ 1.2M)</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Crescimento</p>
-                  <p className="text-sm text-muted-foreground">Capital médio cresceu 34% nos últimos 4 anos</p>
-                </div>
-              </div>
-              <div className="flex items-start gap-3">
-                <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                <div>
-                  <p className="font-medium">Oportunidade</p>
-                  <p className="text-sm text-muted-foreground">Tecnologia: alto potencial, capital moderado</p>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Ranking de Setores por Capital</CardTitle>
-          <CardDescription>Setores ordenados por capital médio investido</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-3">
-            {sectorCapital
-              .sort((a, b) => b.avgCapital - a.avgCapital)
-              .map((sector: any, index) => (
-                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Badge variant="outline">#{index + 1}</Badge>
-                    <div>
-                      <span className="font-medium">{sector.setor}</span>
-                      <p className="text-sm text-muted-foreground">
-                        {sector.companies.toLocaleString("pt-BR")} empresas
-                      </p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-semibold text-green-600">{formatCurrency(sector.avgCapital)}</p>
-                    <p className="text-sm text-muted-foreground">Mediano: {formatCurrency(sector.medianCapital)}</p>
-                  </div>
-                </div>
-              ))}
-          </div>
-        </CardContent>
-      </Card>
     </div>
   )
 }

@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, Filter, Download } from "lucide-react"
+import { getStates, getMunicipalities, getCNAEs, getCompanySizes, getCadastralSituations } from "@/app/dashboard/actions"
 
 interface CompanyFiltersProps {
   filters: any
@@ -16,49 +17,77 @@ interface CompanyFiltersProps {
 }
 
 export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: CompanyFiltersProps) {
-  const [states, setStates] = useState([])
-  const [municipalities, setMunicipalities] = useState([])
-  const [cnaes, setCNAEs] = useState([])
+  const [states, setStates] = useState<string[]>([])
+  const [municipalities, setMunicipalities] = useState<any[]>([])
+  const [cnaes, setCNAEs] = useState<any[]>([])
+  const [companySizes, setCompanySizes] = useState<any[]>([])
+  const [cadastralSituations, setCadastralSituations] = useState<any[]>([])
+  const [loadingStates, setLoadingStates] = useState(true)
+  const [loadingMunicipalities, setLoadingMunicipalities] = useState(false)
+  const [loadingCNAEs, setLoadingCNAEs] = useState(true)
 
   useEffect(() => {
     // Load reference data
     loadStates()
     loadCNAEs()
+    loadStaticData()
   }, [])
 
   useEffect(() => {
     if (filters.uf) {
       loadMunicipalities(filters.uf)
+    } else {
+      setMunicipalities([])
     }
   }, [filters.uf])
 
   const loadStates = async () => {
-    // Mock data - replace with actual API call
-    setStates([
-      { code: "SP", name: "São Paulo" },
-      { code: "RJ", name: "Rio de Janeiro" },
-      { code: "MG", name: "Minas Gerais" },
-      { code: "RS", name: "Rio Grande do Sul" },
-      { code: "PR", name: "Paraná" },
-    ])
+    try {
+      setLoadingStates(true)
+      const data = await getStates()
+      setStates(data)
+    } catch (error) {
+      console.error('Error loading states:', error)
+    } finally {
+      setLoadingStates(false)
+    }
   }
 
   const loadMunicipalities = async (uf: string) => {
-    // Mock data - replace with actual API call
-    setMunicipalities([
-      { code: "3550308", name: "São Paulo" },
-      { code: "3304557", name: "Rio de Janeiro" },
-      { code: "3106200", name: "Belo Horizonte" },
-    ])
+    try {
+      setLoadingMunicipalities(true)
+      const data = await getMunicipalities(uf)
+      setMunicipalities(data)
+    } catch (error) {
+      console.error('Error loading municipalities:', error)
+    } finally {
+      setLoadingMunicipalities(false)
+    }
   }
 
   const loadCNAEs = async () => {
-    // Mock data - replace with actual API call
-    setCNAEs([
-      { code: "4711302", name: "Comércio varejista de mercadorias em geral" },
-      { code: "6201501", name: "Desenvolvimento de programas de computador sob encomenda" },
-      { code: "7020400", name: "Atividades de consultoria em gestão empresarial" },
-    ])
+    try {
+      setLoadingCNAEs(true)
+      const data = await getCNAEs()
+      setCNAEs(data)
+    } catch (error) {
+      console.error('Error loading CNAEs:', error)
+    } finally {
+      setLoadingCNAEs(false)
+    }
+  }
+
+  const loadStaticData = async () => {
+    try {
+      const [sizes, situations] = await Promise.all([
+        getCompanySizes(),
+        getCadastralSituations()
+      ])
+      setCompanySizes(sizes)
+      setCadastralSituations(situations)
+    } catch (error) {
+      console.error('Error loading static data:', error)
+    }
   }
 
   const exportData = async () => {
@@ -99,12 +128,12 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
             <Label htmlFor="uf">Estado (UF)</Label>
             <Select value={filters.uf} onValueChange={(value) => onFilterChange("uf", value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o estado" />
+                <SelectValue placeholder={loadingStates ? "Carregando..." : "Selecione o estado"} />
               </SelectTrigger>
               <SelectContent>
-                {states.map((state: any) => (
-                  <SelectItem key={state.code} value={state.code}>
-                    {state.name}
+                {states.map((state) => (
+                  <SelectItem key={state} value={state}>
+                    {state}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -116,15 +145,15 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
             <Select
               value={filters.municipio}
               onValueChange={(value) => onFilterChange("municipio", value)}
-              disabled={!filters.uf}
+              disabled={!filters.uf || loadingMunicipalities}
             >
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o município" />
+                <SelectValue placeholder={loadingMunicipalities ? "Carregando..." : "Selecione o município"} />
               </SelectTrigger>
               <SelectContent>
-                {municipalities.map((city: any) => (
-                  <SelectItem key={city.code} value={city.code}>
-                    {city.name}
+                {municipalities.map((city) => (
+                  <SelectItem key={city.codigo} value={city.codigo.toString()}>
+                    {city.descricao}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -138,9 +167,12 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
                 <SelectValue placeholder="Selecione o porte" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="01">Micro Empresa</SelectItem>
-                <SelectItem value="03">Empresa de Pequeno Porte</SelectItem>
-                <SelectItem value="05">Demais</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
+                {companySizes.map((size) => (
+                  <SelectItem key={size.value} value={size.value}>
+                    {size.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -152,10 +184,12 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
                 <SelectValue placeholder="Selecione a situação" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="02">Ativa</SelectItem>
-                <SelectItem value="03">Suspensa</SelectItem>
-                <SelectItem value="04">Inapta</SelectItem>
-                <SelectItem value="08">Baixada</SelectItem>
+                <SelectItem value="">Todas</SelectItem>
+                {cadastralSituations.map((situation) => (
+                  <SelectItem key={situation.value} value={situation.value}>
+                    {situation.label}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -164,12 +198,13 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
             <Label htmlFor="cnae">CNAE Principal</Label>
             <Select value={filters.cnae} onValueChange={(value) => onFilterChange("cnae", value)}>
               <SelectTrigger>
-                <SelectValue placeholder="Selecione o CNAE" />
+                <SelectValue placeholder={loadingCNAEs ? "Carregando..." : "Selecione o CNAE"} />
               </SelectTrigger>
               <SelectContent>
-                {cnaes.map((cnae: any) => (
-                  <SelectItem key={cnae.code} value={cnae.code}>
-                    {cnae.code} - {cnae.name}
+                <SelectItem value="">Todos</SelectItem>
+                {cnaes.map((cnae) => (
+                  <SelectItem key={cnae.codigo} value={cnae.codigo}>
+                    {cnae.codigo} - {cnae.descricao}
                   </SelectItem>
                 ))}
               </SelectContent>

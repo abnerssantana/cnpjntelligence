@@ -6,20 +6,27 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Search, ExternalLink } from "lucide-react"
+import { Search, ExternalLink, ChevronLeft, ChevronRight } from "lucide-react"
 
 interface CompanyTableProps {
   companies: any[]
   loading: boolean
+  pagination?: {
+    currentPage: number
+    totalPages: number
+    totalCount: number
+    onPageChange: (page: number) => void
+  }
 }
 
-export function CompanyTable({ companies, loading }: CompanyTableProps) {
+export function CompanyTable({ companies, loading, pagination }: CompanyTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   const filteredCompanies = companies.filter(
     (company) =>
-      company.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      company.cnpj_completo?.includes(searchTerm),
+      company.companies?.razao_social?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      company.cnpj_completo?.includes(searchTerm) ||
+      company.nome_fantasia?.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
   const getSituacaoLabel = (situacao: number) => {
@@ -99,18 +106,27 @@ export function CompanyTable({ companies, loading }: CompanyTableProps) {
                 </TableRow>
               ) : (
                 filteredCompanies.map((company, index) => (
-                  <TableRow key={index}>
+                  <TableRow key={company.id || index}>
                     <TableCell className="font-mono text-sm">{formatCNPJ(company.cnpj_completo)}</TableCell>
-                    <TableCell className="font-medium">{company.razao_social}</TableCell>
+                    <TableCell className="font-medium">{company.companies?.razao_social || "-"}</TableCell>
                     <TableCell>{company.nome_fantasia || "-"}</TableCell>
                     <TableCell>
                       <Badge variant={getSituacaoLabel(company.situacao_cadastral).variant}>
                         {getSituacaoLabel(company.situacao_cadastral).label}
                       </Badge>
                     </TableCell>
-                    <TableCell>{getPorteLabel(company.porte_empresa)}</TableCell>
+                    <TableCell>{getPorteLabel(company.companies?.porte_empresa || 0)}</TableCell>
                     <TableCell>{company.uf}</TableCell>
-                    <TableCell className="font-mono text-sm">{company.cnae_fiscal_principal}</TableCell>
+                    <TableCell>
+                      <div className="flex flex-col">
+                        <span className="font-mono text-sm">{company.cnae_fiscal_principal}</span>
+                        {company.cnaes?.descricao && (
+                          <span className="text-xs text-muted-foreground truncate max-w-[200px]">
+                            {company.cnaes.descricao}
+                          </span>
+                        )}
+                      </div>
+                    </TableCell>
                     <TableCell>
                       <Button variant="ghost" size="sm">
                         <ExternalLink className="h-4 w-4" />
@@ -123,11 +139,34 @@ export function CompanyTable({ companies, loading }: CompanyTableProps) {
           </Table>
         </div>
 
-        {filteredCompanies.length > 0 && (
+        {pagination && (
           <div className="flex items-center justify-between mt-4">
             <p className="text-sm text-muted-foreground">
-              Mostrando {filteredCompanies.length} de {companies.length} empresas
+              Mostrando {companies.length} de {pagination.totalCount} empresas
             </p>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => pagination.onPageChange(pagination.currentPage - 1)}
+                disabled={pagination.currentPage === 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                Anterior
+              </Button>
+              <span className="text-sm">
+                Página {pagination.currentPage} de {pagination.totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => pagination.onPageChange(pagination.currentPage + 1)}
+                disabled={pagination.currentPage === pagination.totalPages}
+              >
+                Próxima
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         )}
       </CardContent>
