@@ -2,7 +2,7 @@
 
 # dependencies
 /node_modules
-
+/CNPJ_Matrix
 # next.js
 /.next/
 /out/
