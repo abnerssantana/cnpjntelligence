@@ -54,7 +54,10 @@ async function importCNAEs() {
 
   let count = 0;
   let batch = [];
-  const batchSize = 1000;
+  let lineNumber = 0;
+  const batchSize = 100;
+  let totalInserted = 0;
+  let totalUpdated = 0;
 
   await client.query('BEGIN');
   
@@ -63,33 +66,38 @@ async function importCNAEs() {
     await client.query('DELETE FROM cnaes');
     
     for await (const line of rl) {
+      lineNumber++;
       if (!line.trim()) continue;
       
       const data = processReferenceCSVLine(line);
       
       if (data.codigo && data.descricao) {
-        batch.push(data);
+        batch.push({ ...data, _line: lineNumber });
         
         if (batch.length >= batchSize) {
-          await processCNAEBatch(batch);
+          const { inserted, updated } = await processCNAEBatch(batch);
+          totalInserted += inserted;
+          totalUpdated += updated;
           count += batch.length;
           batch = [];
           
-          if (count % 5000 === 0) {
-            console.log(`📈 CNAEs processados: ${count.toLocaleString()}`);
-          }
+          console.log(`📈 CNAEs processados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
       }
     }
     
     // Processar último lote
     if (batch.length > 0) {
-      await processCNAEBatch(batch);
+      const { inserted, updated } = await processCNAEBatch(batch);
+      totalInserted += inserted;
+      totalUpdated += updated;
       count += batch.length;
     }
     
     await client.query('COMMIT');
-    console.log(`✅ CNAEs importados: ${count.toLocaleString()}`);
+    console.log(`✅ CNAEs importados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
     
   } catch (error) {
     await client.query('ROLLBACK');
@@ -106,11 +114,24 @@ async function processCNAEBatch(batch) {
     VALUES ($1, $2)
     ON CONFLICT (codigo) DO UPDATE SET
       descricao = EXCLUDED.descricao
+    RETURNING xmax
   `;
-  
+  let inserted = 0;
+  let updated = 0;
   for (const item of batch) {
-    await client.query(query, [item.codigo, item.descricao]);
+    try {
+      const res = await client.query(query, [item.codigo, item.descricao]);
+      // Se xmax = 0, foi insert; se > 0, foi update
+      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+        inserted++;
+      } else {
+        updated++;
+      }
+    } catch (err) {
+      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
+    }
   }
+  return { inserted, updated };
 }
 
 // Função para importar Municípios
@@ -127,7 +148,10 @@ async function importMunicipalities() {
 
   let count = 0;
   let batch = [];
-  const batchSize = 1000;
+  let lineNumber = 0;
+  const batchSize = 100;
+  let totalInserted = 0;
+  let totalUpdated = 0;
 
   await client.query('BEGIN');
   
@@ -136,33 +160,38 @@ async function importMunicipalities() {
     await client.query('DELETE FROM municipalities');
     
     for await (const line of rl) {
+      lineNumber++;
       if (!line.trim()) continue;
       
       const data = processReferenceCSVLine(line);
       
       if (data.codigo && data.descricao) {
-        batch.push(data);
+        batch.push({ ...data, _line: lineNumber });
         
         if (batch.length >= batchSize) {
-          await processMunicipalityBatch(batch);
+          const { inserted, updated } = await processMunicipalityBatch(batch);
+          totalInserted += inserted;
+          totalUpdated += updated;
           count += batch.length;
           batch = [];
           
-          if (count % 1000 === 0) {
-            console.log(`📈 Municípios processados: ${count.toLocaleString()}`);
-          }
+          console.log(`📈 Municípios processados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
       }
     }
     
     // Processar último lote
     if (batch.length > 0) {
-      await processMunicipalityBatch(batch);
+      const { inserted, updated } = await processMunicipalityBatch(batch);
+      totalInserted += inserted;
+      totalUpdated += updated;
       count += batch.length;
     }
     
     await client.query('COMMIT');
-    console.log(`✅ Municípios importados: ${count.toLocaleString()}`);
+    console.log(`✅ Municípios importados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
     
   } catch (error) {
     await client.query('ROLLBACK');
@@ -179,11 +208,23 @@ async function processMunicipalityBatch(batch) {
     VALUES ($1, $2)
     ON CONFLICT (codigo) DO UPDATE SET
       descricao = EXCLUDED.descricao
+    RETURNING xmax
   `;
-  
+  let inserted = 0;
+  let updated = 0;
   for (const item of batch) {
-    await client.query(query, [item.codigo, item.descricao]);
+    try {
+      const res = await client.query(query, [item.codigo, item.descricao]);
+      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+        inserted++;
+      } else {
+        updated++;
+      }
+    } catch (err) {
+      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
+    }
   }
+  return { inserted, updated };
 }
 
 // Função para importar Naturezas Jurídicas
@@ -200,7 +241,10 @@ async function importLegalNatures() {
 
   let count = 0;
   let batch = [];
-  const batchSize = 1000;
+  let lineNumber = 0;
+  const batchSize = 100;
+  let totalInserted = 0;
+  let totalUpdated = 0;
 
   await client.query('BEGIN');
   
@@ -209,33 +253,38 @@ async function importLegalNatures() {
     await client.query('DELETE FROM legal_natures');
     
     for await (const line of rl) {
+      lineNumber++;
       if (!line.trim()) continue;
       
       const data = processReferenceCSVLine(line);
       
       if (data.codigo && data.descricao) {
-        batch.push(data);
+        batch.push({ ...data, _line: lineNumber });
         
         if (batch.length >= batchSize) {
-          await processLegalNatureBatch(batch);
+          const { inserted, updated } = await processLegalNatureBatch(batch);
+          totalInserted += inserted;
+          totalUpdated += updated;
           count += batch.length;
           batch = [];
           
-          if (count % 500 === 0) {
-            console.log(`📈 Naturezas Jurídicas processadas: ${count.toLocaleString()}`);
-          }
+          console.log(`📈 Naturezas Jurídicas processadas: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
       }
     }
     
     // Processar último lote
     if (batch.length > 0) {
-      await processLegalNatureBatch(batch);
+      const { inserted, updated } = await processLegalNatureBatch(batch);
+      totalInserted += inserted;
+      totalUpdated += updated;
       count += batch.length;
     }
     
     await client.query('COMMIT');
-    console.log(`✅ Naturezas Jurídicas importadas: ${count.toLocaleString()}`);
+    console.log(`✅ Naturezas Jurídicas importadas: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
     
   } catch (error) {
     await client.query('ROLLBACK');
@@ -252,11 +301,23 @@ async function processLegalNatureBatch(batch) {
     VALUES ($1, $2)
     ON CONFLICT (codigo) DO UPDATE SET
       descricao = EXCLUDED.descricao
+    RETURNING xmax
   `;
-  
+  let inserted = 0;
+  let updated = 0;
   for (const item of batch) {
-    await client.query(query, [item.codigo, item.descricao]);
+    try {
+      const res = await client.query(query, [item.codigo, item.descricao]);
+      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+        inserted++;
+      } else {
+        updated++;
+      }
+    } catch (err) {
+      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
+    }
   }
+  return { inserted, updated };
 }
 
 // Função para importar Motivos de Situação Cadastral
@@ -281,7 +342,10 @@ async function importMotivos() {
 
   let count = 0;
   let batch = [];
-  const batchSize = 1000;
+  let lineNumber = 0;
+  const batchSize = 100;
+  let totalInserted = 0;
+  let totalUpdated = 0;
 
   await client.query('BEGIN');
   
@@ -290,33 +354,38 @@ async function importMotivos() {
     await client.query('DELETE FROM cadastral_situation_reasons');
     
     for await (const line of rl) {
+      lineNumber++;
       if (!line.trim()) continue;
       
       const data = processReferenceCSVLine(line);
       
       if (data.codigo !== null && data.descricao) {
-        batch.push(data);
+        batch.push({ ...data, _line: lineNumber });
         
         if (batch.length >= batchSize) {
-          await processMotivosBatch(batch);
+          const { inserted, updated } = await processMotivosBatch(batch);
+          totalInserted += inserted;
+          totalUpdated += updated;
           count += batch.length;
           batch = [];
           
-          if (count % 100 === 0) {
-            console.log(`📈 Motivos processados: ${count.toLocaleString()}`);
-          }
+          console.log(`📈 Motivos processados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
       }
     }
     
     // Processar último lote
     if (batch.length > 0) {
-      await processMotivosBatch(batch);
+      const { inserted, updated } = await processMotivosBatch(batch);
+      totalInserted += inserted;
+      totalUpdated += updated;
       count += batch.length;
     }
     
     await client.query('COMMIT');
-    console.log(`✅ Motivos importados: ${count.toLocaleString()}`);
+    console.log(`✅ Motivos importados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
     
   } catch (error) {
     await client.query('ROLLBACK');
@@ -333,11 +402,23 @@ async function processMotivosBatch(batch) {
     VALUES ($1, $2)
     ON CONFLICT (codigo) DO UPDATE SET
       descricao = EXCLUDED.descricao
+    RETURNING xmax
   `;
-  
+  let inserted = 0;
+  let updated = 0;
   for (const item of batch) {
-    await client.query(query, [item.codigo, item.descricao]);
+    try {
+      const res = await client.query(query, [item.codigo, item.descricao]);
+      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+        inserted++;
+      } else {
+        updated++;
+      }
+    } catch (err) {
+      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
+    }
   }
+  return { inserted, updated };
 }
 
 // Função principal
