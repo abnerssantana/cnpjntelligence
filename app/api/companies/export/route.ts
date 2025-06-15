@@ -16,9 +16,7 @@ export async function POST(request: NextRequest) {
           natureza_juridica,
           capital_social,
           porte_empresa
-        ),
-        municipalities(descricao),
-        cnaes!cnae_fiscal_principal(descricao)
+        )
       `)
       .limit(10000) // Limit export to 10k records
 
@@ -29,10 +27,10 @@ export async function POST(request: NextRequest) {
     if (filters.municipio) {
       query = query.eq('municipio', filters.municipio)
     }
-    if (filters.situacao) {
+    if (filters.situacao && filters.situacao !== 'all') {
       query = query.eq('situacao_cadastral', filters.situacao)
     }
-    if (filters.cnae) {
+    if (filters.cnae && filters.cnae !== 'all') {
       query = query.eq('cnae_fiscal_principal', filters.cnae)
     }
     if (filters.porte && filters.porte !== 'all') {
@@ -52,8 +50,40 @@ export async function POST(request: NextRequest) {
       throw new Error(error.message)
     }
 
+    // Enrich companies with municipality and CNAE descriptions
+    let enrichedCompanies = companies || []
+    
+    if (companies && companies.length > 0) {
+      // Get unique municipality codes
+      const municipioCodes = [...new Set(companies.map((c: any) => c.municipio).filter(Boolean))]
+      const cnaeCodes = [...new Set(companies.map((c: any) => c.cnae_fiscal_principal).filter(Boolean))]
+      
+      // Fetch municipality descriptions
+      const { data: municipalities } = await supabaseServer
+        .from('municipalities')
+        .select('codigo, descricao')
+        .in('codigo', municipioCodes)
+      
+      // Fetch CNAE descriptions
+      const { data: cnaes } = await supabaseServer
+        .from('cnaes')
+        .select('codigo, descricao')
+        .in('codigo', cnaeCodes)
+      
+      // Create lookup maps
+      const municipalityMap = new Map(municipalities?.map(m => [m.codigo, m.descricao]) || [])
+      const cnaeMap = new Map(cnaes?.map(c => [c.codigo, c.descricao]) || [])
+      
+      // Enrich companies with descriptions
+      enrichedCompanies = companies.map((company: any) => ({
+        ...company,
+        municipalities: company.municipio ? { descricao: municipalityMap.get(company.municipio) } : null,
+        cnaes: company.cnae_fiscal_principal ? { descricao: cnaeMap.get(company.cnae_fiscal_principal) } : null
+      }))
+    }
+
     // Format data for export
-    const exportData = companies?.map(company => ({
+    const exportData = enrichedCompanies?.map(company => ({
       'CNPJ': formatCNPJ(company.cnpj_completo),
       'Razão Social': company.companies?.razao_social || '',
       'Nome Fantasia': company.nome_fantasia || '',

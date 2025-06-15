@@ -184,7 +184,7 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
                 <SelectValue placeholder="Selecione a situação" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todas</SelectItem>
+                <SelectItem value="all">Todas</SelectItem>
                 {cadastralSituations.map((situation) => (
                   <SelectItem key={situation.value} value={situation.value}>
                     {situation.label}
@@ -201,7 +201,7 @@ export function CompanyFilters({ filters, onFilterChange, onSearch, loading }: C
                 <SelectValue placeholder={loadingCNAEs ? "Carregando..." : "Selecione o CNAE"} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Todos</SelectItem>
+                <SelectItem value="all">Todos</SelectItem>
                 {cnaes.map((cnae) => (
                   <SelectItem key={cnae.codigo} value={cnae.codigo}>
                     {cnae.codigo} - {cnae.descricao}

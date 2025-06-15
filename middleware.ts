@@ -17,17 +17,12 @@ export default withAuth(
   }
 )
 
-// Proteger todas as rotas exceto login, api/auth e arquivos estáticos
+// Proteger apenas rotas específicas que precisam de autenticação
 export const config = {
   matcher: [
-    /*
-     * Match all request paths except for the ones starting with:
-     * - api/auth (auth endpoints)
-     * - login (login page)
-     * - _next/static (static files)
-     * - _next/image (image optimization files)
-     * - favicon.ico (favicon file)
-     */
-    '/((?!api/auth|login|_next/static|_next/image|favicon.ico).*)',
+    '/dashboard/:path*',
+    '/subscription/:path*',
+    '/api/dashboard/:path*',
+    '/api/subscription/:path*',
   ],
 }

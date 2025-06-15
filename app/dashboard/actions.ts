@@ -84,7 +84,7 @@ export async function getDashboardData(filters: DashboardFilters) {
       const limit = filters.limit || 50
       const offset = (page - 1) * limit
 
-      // Build query
+      // Build query with manual joins since foreign key relationships aren't recognized
       let query = supabaseServer
         .from('establishments')
         .select(`
@@ -94,9 +94,7 @@ export async function getDashboardData(filters: DashboardFilters) {
             natureza_juridica,
             capital_social,
             porte_empresa
-          ),
-          municipalities(descricao),
-          cnaes!cnae_fiscal_principal(descricao)
+          )
         `, { count: 'exact' })
         .range(offset, offset + limit - 1)
         .order('created_at', { ascending: false })
@@ -108,10 +106,10 @@ export async function getDashboardData(filters: DashboardFilters) {
       if (filters.municipio) {
         query = query.eq('municipio', filters.municipio)
       }
-      if (filters.situacao) {
+      if (filters.situacao && filters.situacao !== 'all') {
         query = query.eq('situacao_cadastral', filters.situacao)
       }
-      if (filters.cnae) {
+      if (filters.cnae && filters.cnae !== 'all') {
         query = query.eq('cnae_fiscal_principal', filters.cnae)
       }
       if (filters.porte && filters.porte !== 'all') {
@@ -135,20 +133,52 @@ export async function getDashboardData(filters: DashboardFilters) {
         throw new Error(error.message)
       }
 
+      // Fetch municipality and CNAE descriptions separately
+      let enrichedCompanies = companies || []
+      
+      if (companies && companies.length > 0) {
+        // Get unique municipality codes
+        const municipioCodes = [...new Set(companies.map((c: any) => c.municipio).filter(Boolean))]
+        const cnaeCodes = [...new Set(companies.map((c: any) => c.cnae_fiscal_principal).filter(Boolean))]
+        
+        // Fetch municipality descriptions
+        const { data: municipalities } = await supabaseServer
+          .from('municipalities')
+          .select('codigo, descricao')
+          .in('codigo', municipioCodes)
+        
+        // Fetch CNAE descriptions
+        const { data: cnaes } = await supabaseServer
+          .from('cnaes')
+          .select('codigo, descricao')
+          .in('codigo', cnaeCodes)
+        
+        // Create lookup maps
+        const municipalityMap = new Map(municipalities?.map(m => [m.codigo, m.descricao]) || [])
+        const cnaeMap = new Map(cnaes?.map(c => [c.codigo, c.descricao]) || [])
+        
+        // Enrich companies with descriptions
+        enrichedCompanies = companies.map((company: any) => ({
+          ...company,
+          municipalities: company.municipio ? { descricao: municipalityMap.get(company.municipio) } : null,
+          cnaes: company.cnae_fiscal_principal ? { descricao: cnaeMap.get(company.cnae_fiscal_principal) } : null
+        }))
+      }
+
       // Calculate KPIs based on filtered data
       const totalCompanies = count || 0
-      const activeCompanies = companies?.filter((c: any) => c.situacao_cadastral === 2).length || 0
+      const activeCompanies = enrichedCompanies?.filter((c: any) => c.situacao_cadastral === 2).length || 0
       
       // For new and closed companies, we'll calculate based on date ranges
       const thirtyDaysAgo = new Date()
       thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30)
       
-      const newCompanies = companies?.filter((c: any) => {
+      const newCompanies = enrichedCompanies?.filter((c: any) => {
         const startDate = new Date(c.data_inicio_atividade)
         return startDate >= thirtyDaysAgo
       }).length || 0
 
-      const closedCompanies = companies?.filter((c: any) => 
+      const closedCompanies = enrichedCompanies?.filter((c: any) => 
         c.situacao_cadastral === 8 || c.situacao_cadastral === 3
       ).length || 0
 
@@ -160,7 +190,7 @@ export async function getDashboardData(filters: DashboardFilters) {
       }
 
       return {
-        companies: companies || [],
+        companies: enrichedCompanies,
         kpis,
         totalCount: count || 0,
         currentPage: page,
@@ -192,24 +222,31 @@ export const getStates = unstable_cache(
 export async function getMunicipalities(uf: string) {
   if (!uf) return []
   
-  const { data } = await supabaseServer
+  // First get unique municipality codes for the state
+  const { data: establishmentMunicipios } = await supabaseServer
     .from('establishments')
-    .select('municipio, municipalities(codigo, descricao)')
+    .select('municipio')
     .eq('uf', uf)
     .not('municipio', 'is', null)
-    .order('municipalities(descricao)')
 
-  const uniqueMunicipalities = data?.reduce((acc: any[], item: any) => {
-    if (item.municipalities && !acc.find(m => m.codigo === item.municipio)) {
-      acc.push({
-        codigo: item.municipio,
-        descricao: item.municipalities.descricao
-      })
-    }
-    return acc
-  }, []) || []
+  if (!establishmentMunicipios || establishmentMunicipios.length === 0) {
+    return []
+  }
 
-  return uniqueMunicipalities
+  // Get unique municipality codes
+  const uniqueMunicipioCodes = [...new Set(establishmentMunicipios.map(item => item.municipio))]
+  
+  // Fetch municipality descriptions
+  const { data: municipalities } = await supabaseServer
+    .from('municipalities')
+    .select('codigo, descricao')
+    .in('codigo', uniqueMunicipioCodes)
+    .order('descricao')
+
+  return municipalities?.map(m => ({
+    codigo: m.codigo,
+    descricao: m.descricao
+  })) || []
 }
 
 // Get CNAEs for filter

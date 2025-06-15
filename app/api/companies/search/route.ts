@@ -24,11 +24,11 @@ export async function POST(request: NextRequest) {
       query = query.eq("municipio", filters.municipio)
     }
 
-    if (filters.situacao) {
+    if (filters.situacao && filters.situacao !== "all") {
       query = query.eq("situacao_cadastral", filters.situacao)
     }
 
-    if (filters.cnae) {
+    if (filters.cnae && filters.cnae !== "all") {
       query = query.eq("cnae_fiscal_principal", filters.cnae)
     }
 

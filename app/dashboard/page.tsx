@@ -13,22 +13,25 @@ export const metadata: Metadata = {
 }
 
 interface DashboardPageProps {
-  searchParams: DashboardFilters
+  searchParams: Promise<DashboardFilters>
 }
 
 export default async function Dashboard({ searchParams }: DashboardPageProps) {
+  // Await search params before using them
+  const searchParamsResolved = await searchParams
+  
   // Parse search params with defaults
   const filters: DashboardFilters = {
-    uf: searchParams.uf || "",
-    municipio: searchParams.municipio || "",
-    porte: searchParams.porte || "",
-    situacao: searchParams.situacao || "",
-    cnae: searchParams.cnae || "",
-    natureza_juridica: searchParams.natureza_juridica || "",
-    cnpj: searchParams.cnpj || "",
-    search: searchParams.search || "",
-    page: Number(searchParams.page) || 1,
-    limit: Number(searchParams.limit) || 50
+    uf: searchParamsResolved.uf || "",
+    municipio: searchParamsResolved.municipio || "",
+    porte: searchParamsResolved.porte || "",
+    situacao: searchParamsResolved.situacao || "",
+    cnae: searchParamsResolved.cnae || "",
+    natureza_juridica: searchParamsResolved.natureza_juridica || "",
+    cnpj: searchParamsResolved.cnpj || "",
+    search: searchParamsResolved.search || "",
+    page: Number(searchParamsResolved.page) || 1,
+    limit: Number(searchParamsResolved.limit) || 50
   }
 
   return (

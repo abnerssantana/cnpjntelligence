@@ -7,7 +7,8 @@ CREATE TABLE companies (
     capital_social DECIMAL(15,2),
     porte_empresa INTEGER,
     ente_federativo_responsavel TEXT,
-    created_at TIMESTAMP DEFAULT NOW()
+    created_at TIMESTAMP DEFAULT NOW(),
+    FOREIGN KEY (natureza_juridica) REFERENCES legal_natures(codigo)
 );
 
 -- Establishments table (Estabelecimentos)
@@ -45,7 +46,9 @@ CREATE TABLE establishments (
     situacao_especial TEXT,
     data_situacao_especial DATE,
     created_at TIMESTAMP DEFAULT NOW(),
-    FOREIGN KEY (cnpj_basico) REFERENCES companies(cnpj_basico)
+    FOREIGN KEY (cnpj_basico) REFERENCES companies(cnpj_basico),
+    FOREIGN KEY (municipio) REFERENCES municipalities(codigo),
+    FOREIGN KEY (cnae_fiscal_principal) REFERENCES cnaes(codigo)
 );
 
 -- Simples data table

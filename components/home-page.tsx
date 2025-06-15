@@ -19,6 +19,7 @@ import {
   Database,
 } from "lucide-react"
 import Link from "next/link"
+import { PublicHeader } from "@/components/public-header"
 
 export function HomePage() {
   const [stats, setStats] = useState({
@@ -34,11 +35,11 @@ export function HomePage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    // Load real stats from server action
+    // Load real stats from public server action
     const loadStats = async () => {
       try {
-        const { getGlobalStats } = await import('@/app/dashboard/actions')
-        const data = await getGlobalStats()
+        const { getPublicGlobalStats } = await import('@/app/actions/public-stats')
+        const data = await getPublicGlobalStats()
         setStats(data)
       } catch (error) {
         console.error('Error loading stats:', error)
@@ -138,25 +139,7 @@ export function HomePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold">CNPJ Analytics</span>
-            </div>
-            <div className="flex items-center gap-4">
-              <Link href="/login">
-                <Button variant="ghost">Entrar</Button>
-              </Link>
-              <Link href="/auth/register">
-                <Button>Começar Grátis</Button>
-              </Link>
-            </div>
-          </div>
-        </div>
-      </header>
+      <PublicHeader />
 
       {/* Hero Section */}
       <section className="py-20">
