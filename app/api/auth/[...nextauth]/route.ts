@@ -13,7 +13,16 @@ export const authOptions: NextAuthOptions = {
         password: { label: "Senha", type: "password" }
       },
       async authorize(credentials) {
+        // Log para debug em produção
+        console.log('[NextAuth] Tentativa de autenticação:', {
+          email: credentials?.email,
+          hasPassword: !!credentials?.password,
+          environment: process.env.NODE_ENV,
+          timestamp: new Date().toISOString()
+        })
+
         if (!credentials?.email || !credentials?.password) {
+          console.log('[NextAuth] Credenciais ausentes')
           return null
         }
 
@@ -23,7 +32,9 @@ export const authOptions: NextAuthOptions = {
         })
 
         try {
+          console.log('[NextAuth] Conectando ao banco de dados...')
           await client.connect()
+          console.log('[NextAuth] Conexão estabelecida')
           
           // Buscar usuário no banco
           const query = `
@@ -38,7 +49,13 @@ export const authOptions: NextAuthOptions = {
           
           const result = await client.query(query, [credentials.email])
           
+          console.log('[NextAuth] Resultado da busca:', {
+            found: result.rows.length > 0,
+            email: credentials.email
+          })
+          
           if (result.rows.length === 0) {
+            console.log('[NextAuth] Usuário não encontrado')
             return null
           }
           
@@ -47,21 +64,33 @@ export const authOptions: NextAuthOptions = {
           // Verificar senha
           const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash)
           
+          console.log('[NextAuth] Validação de senha:', {
+            isValid: isPasswordValid,
+            userId: user.id
+          })
+          
           if (!isPasswordValid) {
+            console.log('[NextAuth] Senha inválida')
             return null
           }
           
           // Retornar dados do usuário
+          console.log('[NextAuth] Autenticação bem-sucedida para:', user.email)
           return {
             id: user.id,
             email: user.email,
             name: user.name
           }
         } catch (error) {
-          console.error('Erro na autenticação:', error)
+          console.error('[NextAuth] Erro na autenticação:', {
+            error: error instanceof Error ? error.message : String(error),
+            stack: error instanceof Error ? error.stack : undefined,
+            timestamp: new Date().toISOString()
+          })
           return null
         } finally {
           await client.end()
+          console.log('[NextAuth] Conexão com banco fechada')
         }
       }
     })
@@ -89,7 +118,17 @@ export const authOptions: NextAuthOptions = {
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
   secret: process.env.NEXTAUTH_SECRET || process.env.SUPABASE_JWT_SECRET,
+  debug: process.env.NODE_ENV === 'development',
 }
+
+// Log de configuração (remover após resolver o problema)
+console.log('[NextAuth] Configuração:', {
+  NODE_ENV: process.env.NODE_ENV,
+  NEXTAUTH_URL: process.env.NEXTAUTH_URL,
+  NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+  POSTGRES_URL: process.env.POSTGRES_URL ? 'CONFIGURADO' : 'NÃO CONFIGURADO',
+  timestamp: new Date().toISOString()
+})
 
 const handler = NextAuth(authOptions)
 
