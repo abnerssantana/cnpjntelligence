@@ -33,9 +33,7 @@ export const authOptions: NextAuthOptions = {
               id, 
               email, 
               name, 
-              password_hash,
-              subscription_status, 
-              subscription_expires_at
+              password_hash
             FROM app_users 
             WHERE email = $1
           `
@@ -55,19 +53,11 @@ export const authOptions: NextAuthOptions = {
             return null
           }
           
-          // Verificar se a assinatura está ativa
-          const isSubscriptionActive = 
-            user.subscription_status === 'active' && 
-            new Date(user.subscription_expires_at) > new Date()
-          
           // Retornar dados do usuário
           return {
             id: user.id,
             email: user.email,
-            name: user.name,
-            subscriptionStatus: user.subscription_status,
-            subscriptionExpiresAt: user.subscription_expires_at,
-            isSubscriptionActive
+            name: user.name
           }
         } catch (error) {
           console.error('Erro na autenticação:', error)
@@ -82,18 +72,12 @@ export const authOptions: NextAuthOptions = {
     async jwt({ token, user }) {
       if (user) {
         token.id = user.id
-        token.subscriptionStatus = user.subscriptionStatus
-        token.subscriptionExpiresAt = user.subscriptionExpiresAt
-        token.isSubscriptionActive = user.isSubscriptionActive
       }
       return token
     },
     async session({ session, token }) {
       if (session?.user) {
         session.user.id = token.id as string
-        session.user.subscriptionStatus = token.subscriptionStatus as string
-        session.user.subscriptionExpiresAt = token.subscriptionExpiresAt as string
-        session.user.isSubscriptionActive = token.isSubscriptionActive as boolean
       }
       return session
     }

@@ -242,26 +242,24 @@ async function fetchFromAPI(cnpj: string): Promise<Empresa | null> {
  */
 export async function getEmpresasStats() {
   try {
-    const [
-      { count: total },
-      { count: ativas },
-      { data: porUF },
-      { data: porPorte }
-    ] = await Promise.all([
-      supabase.from('empresas').select('*', { count: 'exact', head: true }),
-      supabase.from('empresas').select('*', { count: 'exact', head: true }).eq('situacao_cadastral', 2),
-      supabase.from('empresas').select('uf').select('uf, count'),
-      supabase.from('empresas').select('codigo_porte').select('codigo_porte, porte, count')
-    ]);
+    const { count: total } = await supabase
+      .from('empresas')
+      .select('*', { count: 'exact', head: true });
+
+    const { count: ativas } = await supabase
+      .from('empresas')
+      .select('*', { count: 'exact', head: true })
+      .eq('situacao_cadastral', 2);
 
     return {
-      total,
-      ativas,
-      porUF,
-      porPorte
+      total: total || 0,
+      ativas: ativas || 0
     };
   } catch (error) {
     console.error('Error getting stats:', error);
-    throw error;
+    return {
+      total: 0,
+      ativas: 0
+    };
   }
 }
