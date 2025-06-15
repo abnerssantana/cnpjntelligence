@@ -1,4 +1,5 @@
-import { supabaseServer } from '../lib/supabaseServer'
+import { Client } from 'pg'
+import bcrypt from 'bcryptjs'
 import * as readline from 'readline'
 
 const rl = readline.createInterface({
@@ -13,83 +14,74 @@ function question(query: string): Promise<string> {
 }
 
 async function createAdminUser() {
+  // Configuração SSL
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
+  
+  const client = new Client({
+    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
+  })
+
   try {
+    await client.connect()
     console.log('🔧 Criação de Usuário Admin\n')
     
     // Solicitar informações do usuário
-    const email = await question('Email do admin (padrão: admin@cnpjanalytics.com): ') || 'admin@cnpjanalytics.com'
+    const email = await question('Email do admin (padrão: admin@cnpjntelligence.com): ') || 'admin@cnpjntelligence.com'
     const name = await question('Nome do admin (padrão: Administrador): ') || 'Administrador'
+    const password = await question('Senha (padrão: admin123): ') || 'admin123'
     
     // Verificar se o usuário já existe
-    const { data: existingUser } = await supabaseServer
-      .from('users')
-      .select('*')
-      .eq('email', email)
-      .single()
+    const checkQuery = 'SELECT * FROM app_users WHERE email = $1'
+    const checkResult = await client.query(checkQuery, [email])
     
-    if (existingUser) {
+    if (checkResult.rows.length > 0) {
       console.log('\n⚠️  Usuário já existe com este email!')
-      console.log(`Email: ${existingUser.email}`)
-      console.log(`Nome: ${existingUser.name}`)
-      console.log(`Status: ${existingUser.subscription_status}`)
+      console.log(`Email: ${checkResult.rows[0].email}`)
+      console.log(`Nome: ${checkResult.rows[0].name}`)
       
-      const update = await question('\nDeseja atualizar este usuário? (s/n): ')
+      const update = await question('\nDeseja atualizar a senha deste usuário? (s/n): ')
       
       if (update.toLowerCase() === 's') {
-        // Atualizar usuário existente
-        const { data: updatedUser, error } = await supabaseServer
-          .from('users')
-          .update({
-            name: name,
-            subscription_status: 'active',
-            subscription_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 ano
-          })
-          .eq('email', email)
-          .select()
-          .single()
+        // Hash da nova senha
+        const hashedPassword = await bcrypt.hash(password, 10)
         
-        if (error) {
-          console.error('\n❌ Erro ao atualizar usuário:', error)
-        } else {
-          console.log('\n✅ Usuário atualizado com sucesso!')
-          console.log(`Email: ${updatedUser.email}`)
-          console.log(`Nome: ${updatedUser.name}`)
-          console.log(`Status: ${updatedUser.subscription_status}`)
-          console.log(`Assinatura válida até: ${new Date(updatedUser.subscription_expires_at).toLocaleDateString('pt-BR')}`)
-        }
+        // Atualizar usuário existente
+        const updateQuery = `
+          UPDATE app_users 
+          SET password_hash = $1, name = $2, updated_at = NOW()
+          WHERE email = $3
+          RETURNING *
+        `
+        
+        const updateResult = await client.query(updateQuery, [hashedPassword, name, email])
+        
+        console.log('\n✅ Usuário atualizado com sucesso!')
+        console.log(`Email: ${updateResult.rows[0].email}`)
+        console.log(`Nome: ${updateResult.rows[0].name}`)
       }
     } else {
-      // Criar novo usuário
-      const { data: newUser, error } = await supabaseServer
-        .from('users')
-        .insert({
-          email: email,
-          name: name,
-          subscription_status: 'active',
-          subscription_expires_at: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString() // 1 ano
-        })
-        .select()
-        .single()
+      // Hash da senha
+      const hashedPassword = await bcrypt.hash(password, 10)
       
-      if (error) {
-        console.error('\n❌ Erro ao criar usuário:', error)
-      } else {
-        console.log('\n✅ Usuário admin criado com sucesso!')
-        console.log(`Email: ${newUser.email}`)
-        console.log(`Nome: ${newUser.name}`)
-        console.log(`Status: ${newUser.subscription_status}`)
-        console.log(`Assinatura válida até: ${new Date(newUser.subscription_expires_at).toLocaleDateString('pt-BR')}`)
-        
-        console.log('\n📝 Observações:')
-        console.log('- Este usuário foi criado diretamente no banco de dados')
-        console.log('- Para fazer login, você precisará usar o Supabase Auth')
-        console.log('- Configure a autenticação no Supabase Dashboard')
-      }
+      // Criar novo usuário
+      const insertQuery = `
+        INSERT INTO app_users (email, name, password_hash)
+        VALUES ($1, $2, $3)
+        RETURNING *
+      `
+      
+      const insertResult = await client.query(insertQuery, [email, name, hashedPassword])
+      
+      console.log('\n✅ Usuário admin criado com sucesso!')
+      console.log(`Email: ${insertResult.rows[0].email}`)
+      console.log(`Nome: ${insertResult.rows[0].name}`)
+      console.log('\n📝 Use estas credenciais para fazer login na plataforma')
     }
     
   } catch (error) {
-    console.error('Erro ao executar script:', error)
+    console.error('\n❌ Erro:', error)
   } finally {
+    await client.end()
     rl.close()
     process.exit(0)
   }
