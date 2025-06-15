@@ -37,10 +37,11 @@ export default withAuth(
 // Proteger rotas específicas
 export const config = {
   matcher: [
-    // Só aplicar middleware para dashboard e subrotas
-    '/dashboard*',
+    '/dashboard',
+    '/dashboard/(.*)',
     '/login',
-    '/auth*',
+    '/auth',
+    '/auth/(.*)',
     '/',
   ],
 }
