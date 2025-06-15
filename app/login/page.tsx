@@ -23,6 +23,13 @@ export default function LoginPage() {
     setError("")
     setIsLoading(true)
 
+    // Log inicial para debug
+    console.log("[Login] Iniciando tentativa de login", { 
+      email, 
+      timestamp: new Date().toISOString(),
+      environment: process.env.NODE_ENV 
+    })
+
     try {
       const result = await signIn("credentials", {
         email,
@@ -30,16 +37,69 @@ export default function LoginPage() {
         redirect: false,
       })
 
+      // Log do resultado da autenticação
+      console.log("[Login] Resultado da autenticação:", {
+        success: !result?.error,
+        error: result?.error,
+        status: result?.status,
+        ok: result?.ok,
+        timestamp: new Date().toISOString()
+      })
+
       if (result?.error) {
-        setError("Email ou senha inválidos")
+        // Log detalhado do erro
+        console.error("[Login] Erro de autenticação:", {
+          error: result.error,
+          status: result.status,
+          email,
+          timestamp: new Date().toISOString()
+        })
+        
+        // Mensagem de erro mais específica baseada no tipo de erro
+        if (result.error === "CredentialsSignin") {
+          setError("Email ou senha inválidos")
+        } else if (result.status === 401) {
+          setError("Credenciais inválidas. Verifique seu email e senha.")
+        } else {
+          setError(`Erro ao fazer login: ${result.error}`)
+        }
       } else {
+        console.log("[Login] Login bem-sucedido, redirecionando para dashboard")
         router.push("/dashboard")
         router.refresh()
       }
     } catch (error) {
-      setError("Ocorreu um erro ao fazer login. Tente novamente.")
+      // Log detalhado de exceções
+      console.error("[Login] Exceção capturada:", {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        type: error instanceof Error ? error.name : typeof error,
+        timestamp: new Date().toISOString()
+      })
+      
+      // Mensagem de erro mais informativa
+      const errorMessage = error instanceof Error 
+        ? `Erro ao fazer login: ${error.message}` 
+        : "Ocorreu um erro inesperado ao fazer login. Tente novamente."
+      
+      setError(errorMessage)
+      
+      // Enviar erro para serviço de monitoramento se disponível
+      if (typeof window !== 'undefined' && (window as any).Sentry) {
+        (window as any).Sentry.captureException(error, {
+          tags: {
+            component: 'LoginPage',
+            action: 'handleSubmit'
+          },
+          extra: {
+            email,
+            timestamp: new Date().toISOString()
+          }
+        })
+      }
     } finally {
       setIsLoading(false)
+      console.log("[Login] Processo de login finalizado")
     }
   }
 
