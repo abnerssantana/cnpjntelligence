@@ -212,7 +212,7 @@ async function fetchFromAPI(cnpj: string): Promise<Empresa | null> {
     const apiData = response.data;
 
     // Import the data using the existing import logic
-    const { importCompany } = await import('@/scripts/import-from-api');
+    const { importCompany } = await import('@/scripts/import-from-api.js');
     const success = await importCompany(cnpj);
 
     if (success) {

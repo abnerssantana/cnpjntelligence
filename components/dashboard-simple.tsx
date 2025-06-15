@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { getEmpresaByCNPJ, searchEmpresas, getEmpresasStats } from '@/lib/api/cnpj';
 import { formatCNPJ, formatCurrency, formatDate } from '@/lib/utils';
-import { useToast } from '@/components/ui/use-toast';
+import { toast } from 'sonner';
 
 export function DashboardSimple() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -29,7 +29,6 @@ export function DashboardSimple() {
     total: 0,
     ativas: 0
   });
-  const { toast } = useToast();
 
   useEffect(() => {
     loadStats();
@@ -66,10 +65,8 @@ export function DashboardSimple() {
           setEmpresas([empresa]);
           setSelectedEmpresa(empresa);
         } else {
-          toast({
-            title: "CNPJ não encontrado",
-            description: "Tente outro CNPJ ou faça uma busca por nome.",
-            variant: "destructive"
+          toast.error("CNPJ não encontrado", {
+            description: "Tente outro CNPJ ou faça uma busca por nome."
           });
           setEmpresas([]);
         }
@@ -86,10 +83,8 @@ export function DashboardSimple() {
       }
     } catch (error) {
       console.error('Search error:', error);
-      toast({
-        title: "Erro na busca",
-        description: "Ocorreu um erro ao buscar. Tente novamente.",
-        variant: "destructive"
+      toast.error("Erro na busca", {
+        description: "Ocorreu um erro ao buscar. Tente novamente."
       });
     } finally {
       setLoading(false);
