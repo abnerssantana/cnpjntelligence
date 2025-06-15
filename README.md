@@ -19,6 +19,10 @@ Plataforma simplificada para consulta de dados de empresas brasileiras usando a 
 
 ## 🔧 Instalação
 
+> **Nota**: Se você não tem o PostgreSQL instalado, consulte o [Guia de Configuração Completo](SETUP.md) para instruções detalhadas.
+
+### Instalação Rápida
+
 1. Clone o repositório:
 ```bash
 git clone https://github.com/seu-usuario/cnpjntelligence.git
@@ -33,31 +37,18 @@ npm install --legacy-peer-deps
 3. Configure as variáveis de ambiente:
 ```bash
 cp .env.example .env.local
+# Edite .env.local com suas credenciais do Supabase
 ```
 
-Edite o arquivo `.env.local` com suas credenciais:
-```env
-# Database
-DATABASE_URL=postgresql://user:password@host:port/database
-POSTGRES_URL=postgresql://user:password@host:port/database
+4. Configure o banco de dados:
 
-# Supabase
-NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
-SUPABASE_SERVICE_ROLE_KEY=your_service_key
+**Opção 1 - Via Supabase Dashboard (Recomendado):**
+- Acesse o SQL Editor no Supabase
+- Execute o conteúdo de `scripts/setup-complete.sql`
 
-# NextAuth
-NEXTAUTH_URL=http://localhost:3000
-NEXTAUTH_SECRET=your_secret_key
-```
-
-4. Crie as tabelas no banco de dados:
+**Opção 2 - Via Script:**
 ```bash
-# Tabelas principais
-npm run db:create-tables
-
-# Tabela de usuários
-npm run db:create-users
+npm run db:setup-supabase
 ```
 
 5. Crie um usuário administrador:
@@ -65,10 +56,12 @@ npm run db:create-users
 npm run create-admin
 ```
 
-6. Inicie o servidor de desenvolvimento:
+6. Inicie o servidor:
 ```bash
 npm run dev
 ```
+
+Para instruções detalhadas e solução de problemas, consulte o [Guia de Configuração](SETUP.md).
 
 ## 📖 Uso
 
@@ -133,8 +126,8 @@ cnpjntelligence/
 - `npm run start` - Inicia o servidor de produção
 - `npm run create-admin` - Cria usuário administrador
 - `npm run import-cnpj` - Importa dados de CNPJ
-- `npm run db:create-tables` - Cria tabelas do banco
-- `npm run db:create-users` - Cria tabela de usuários
+- `npm run db:setup` - Configura banco de dados (requer PostgreSQL)
+- `npm run db:setup-supabase` - Configura banco via Supabase
 
 ## 🤝 Contribuindo
 
