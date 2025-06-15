@@ -19,7 +19,7 @@ import { getEmpresaByCNPJ, searchEmpresas, getEmpresasStats } from '@/lib/api/cn
 import { formatCNPJ, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
-export function DashboardSimple() {
+export function Dash() {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
   const [loadingStats, setLoadingStats] = useState(true);
@@ -163,7 +163,7 @@ export function DashboardSimple() {
         <CardHeader>
           <CardTitle>Buscar Empresa</CardTitle>
           <CardDescription>
-            Digite o CNPJ (apenas números) ou razão social da empresa
+            Digite o CNPJ ou razão social da empresa
           </CardDescription>
         </CardHeader>
         <CardContent>

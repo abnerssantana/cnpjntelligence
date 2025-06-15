@@ -2,7 +2,7 @@ import { Suspense } from "react"
 import { Metadata } from "next"
 import { Card, CardContent } from "@/components/ui/card"
 import { Building2, Loader2 } from "lucide-react"
-import { DashboardSimple } from "@/components/dashboard-simple"
+import { Dash } from "@/components/dashboard"
 
 export const metadata: Metadata = {
   title: 'Dashboard | CNPJntelligence',
@@ -23,7 +23,7 @@ export default function Dashboard() {
 
       <div className="container mx-auto px-4 py-6">
         <Suspense fallback={<DashboardSkeleton />}>
-          <DashboardSimple />
+          <Dash />
         </Suspense>
       </div>
     </div>

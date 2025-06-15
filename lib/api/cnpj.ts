@@ -1,12 +1,10 @@
 import { createClient } from '@supabase/supabase-js';
-import axios from 'axios';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 );
 
-const API_BASE_URL = 'https://minhareceita.org';
 const CACHE_DURATION_DAYS = 7; // Revalidate data after 7 days
 
 export interface Empresa {
@@ -207,15 +205,24 @@ export async function getEmpresasByCnaeSecundario(codigoCnae: number) {
  */
 async function fetchFromAPI(cnpj: string): Promise<Empresa | null> {
   try {
-    const formattedCnpj = cnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
-    const response = await axios.get(`${API_BASE_URL}/${formattedCnpj}`);
-    const apiData = response.data;
+    // Call our API route to import the company
+    const response = await fetch('/api/cnpj/import', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ cnpj }),
+    });
 
-    // Import the data using the existing import logic
-    const { importCompany } = await import('@/scripts/import-from-api.js');
-    const success = await importCompany(cnpj);
+    if (!response.ok) {
+      const error = await response.json();
+      console.error('API import error:', error);
+      return null;
+    }
 
-    if (success) {
+    const result = await response.json();
+
+    if (result.success) {
       // Fetch the updated data from database
       const { data } = await supabase
         .from('empresas')
