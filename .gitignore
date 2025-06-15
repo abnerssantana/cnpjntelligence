@@ -3,6 +3,7 @@
 # dependencies
 /node_modules
 /CNPJ_Matrix
+/scripts/node_modules
 # next.js
 /.next/
 /out/
