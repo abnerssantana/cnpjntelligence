@@ -114,3 +114,7 @@ function isSubscriptionActive(user) {
 - Monitore usuários inativos
 - Implemente política de expiração de senha em produção
 - Configure logs de auditoria para ações administrativas
+
+
+node scripts/import_cnpjs_from_txt.js scripts/cnpj
+s.txt http://localhost:3000/api/cnpj/import
