@@ -2,12 +2,12 @@
   "name": "cnpj-import-scripts",
   "version": "1.0.0",
   "description": "Scripts para importação de dados CNPJ",
-  "main": "import-base-csv-final.js",
+  "main": "import-base-csv-fixed.js",
   "scripts": {
     "check-tables": "node check-tables.js",
     "test-import": "node test-import-stream.js",
-    "import-full": "node import-base-csv-final.js",
-    "import-base": "node import-base-csv-final.js"
+    "test-validation": "node test-data-validation.js",
+    "import-base": "node import-base-csv-fixed.js"
   },
   "dependencies": {
     "pg": "^8.11.3",
