@@ -14,11 +14,9 @@ function question(query: string): Promise<string> {
 }
 
 async function createAdminUser() {
-  // Configuração SSL
-  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0'
-  
   const client = new Client({
-    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL
+    connectionString: process.env.POSTGRES_URL || process.env.DATABASE_URL,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
   })
 
   try {

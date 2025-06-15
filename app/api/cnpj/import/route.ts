@@ -33,9 +33,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Connect to database
-    process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
     const client = new Client({
-      connectionString: process.env.POSTGRES_URL
+      connectionString: process.env.POSTGRES_URL,
+      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
     });
     
     await client.connect();

@@ -3,9 +3,6 @@ import { Client } from 'pg';
 import * as fs from 'fs';
 import * as path from 'path';
 
-// Configuração SSL
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
-
 async function setupDatabase() {
   console.log('🔧 Configurando banco de dados...\n');
 
@@ -17,7 +14,8 @@ async function setupDatabase() {
   }
 
   const client = new Client({
-    connectionString: databaseUrl
+    connectionString: databaseUrl,
+    ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
   });
 
   try {
