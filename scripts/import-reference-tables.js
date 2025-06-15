@@ -45,7 +45,40 @@ async function importCNAEs() {
   const csvPath = path.join(__dirname, '..', 'CNPJ_Matrix', 'cnaes.csv');
   
   console.log('📋 Importando CNAEs...');
+  console.log(`[DEBUG] Verificando existência do arquivo: ${csvPath}`);
+  if (!fs.existsSync(csvPath)) {
+    throw new Error(`[ERRO] Arquivo não encontrado: ${csvPath}`);
+  }
+  console.log('[DEBUG] Arquivo encontrado. Iniciando contagem de linhas...');
+
+  let totalLines = 0;
+  try {
+    totalLines = await new Promise((resolve, reject) => {
+      let lines = 0;
+      fs.createReadStream(csvPath)
+        .on('data', (buffer) => {
+          let idx = -1;
+          lines--;
+          do {
+            idx = buffer.indexOf(10, idx + 1);
+            lines++;
+          } while (idx !== -1);
+        })
+        .on('end', () => {
+          console.log(`[DEBUG] Contagem de linhas concluída: ${lines}`);
+          resolve(lines);
+        })
+        .on('error', (err) => {
+          console.error('[ERRO] Falha ao ler arquivo para contagem de linhas:', err);
+          reject(err);
+        });
+    });
+  } catch (err) {
+    console.warn('[WARN] Falha na contagem de linhas, usando valor padrão 1359.');
+    totalLines = 1359;
+  }
   
+  console.log('[DEBUG] Abrindo arquivo para leitura linha a linha...');
   const fileStream = fs.createReadStream(csvPath);
   const rl = readline.createInterface({
     input: fileStream,
@@ -58,12 +91,10 @@ async function importCNAEs() {
   const batchSize = 100;
   let totalInserted = 0;
   let totalUpdated = 0;
+  const progressStep = 100;
 
-  await client.query('BEGIN');
-  
   try {
-    // Limpar tabela antes de importar
-    await client.query('DELETE FROM cnaes');
+    // Não apagar a tabela antes de importar, apenas inserir/atualizar diferenças
     
     for await (const line of rl) {
       lineNumber++;
@@ -73,18 +104,20 @@ async function importCNAEs() {
       
       if (data.codigo && data.descricao) {
         batch.push({ ...data, _line: lineNumber });
-        
-        if (batch.length >= batchSize) {
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+      }
+      // Sempre que atingir o passo de progresso OU o batch encher, grava no banco
+      if (batch.length >= batchSize || lineNumber % progressStep === 0 || lineNumber === totalLines) {
+        if (batch.length > 0) {
           const { inserted, updated } = await processCNAEBatch(batch);
           totalInserted += inserted;
           totalUpdated += updated;
           count += batch.length;
           batch = [];
-          
-          console.log(`📈 CNAEs processados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
-      } else {
-        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+        const percent = ((lineNumber / totalLines) * 100).toFixed(1);
+        console.log(`📊 Progresso: ${lineNumber.toLocaleString()} / ${totalLines.toLocaleString()} linhas (${percent}%)`);
       }
     }
     
@@ -96,11 +129,9 @@ async function importCNAEs() {
       count += batch.length;
     }
     
-    await client.query('COMMIT');
     console.log(`✅ CNAEs importados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
     
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('❌ Erro ao importar CNAEs:', error.message);
     throw error;
   }
@@ -118,18 +149,24 @@ async function processCNAEBatch(batch) {
   `;
   let inserted = 0;
   let updated = 0;
-  for (const item of batch) {
-    try {
-      const res = await client.query(query, [item.codigo, item.descricao]);
-      // Se xmax = 0, foi insert; se > 0, foi update
-      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
-        inserted++;
-      } else {
-        updated++;
+  await client.query('BEGIN');
+  try {
+    for (const item of batch) {
+      try {
+        const res = await client.query(query, [item.codigo, item.descricao]);
+        if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+          inserted++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
       }
-    } catch (err) {
-      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
     }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   }
   return { inserted, updated };
 }
@@ -139,7 +176,40 @@ async function importMunicipalities() {
   const csvPath = path.join(__dirname, '..', 'CNPJ_Matrix', 'municipios.csv');
   
   console.log('🏙️ Importando Municípios...');
+  console.log(`[DEBUG] Verificando existência do arquivo: ${csvPath}`);
+  if (!fs.existsSync(csvPath)) {
+    throw new Error(`[ERRO] Arquivo não encontrado: ${csvPath}`);
+  }
+  console.log('[DEBUG] Arquivo encontrado. Iniciando contagem de linhas...');
+
+  let totalLines = 0;
+  try {
+    totalLines = await new Promise((resolve, reject) => {
+      let lines = 0;
+      fs.createReadStream(csvPath)
+        .on('data', (buffer) => {
+          let idx = -1;
+          lines--;
+          do {
+            idx = buffer.indexOf(10, idx + 1);
+            lines++;
+          } while (idx !== -1);
+        })
+        .on('end', () => {
+          console.log(`[DEBUG] Contagem de linhas concluída: ${lines}`);
+          resolve(lines);
+        })
+        .on('error', (err) => {
+          console.error('[ERRO] Falha ao ler arquivo para contagem de linhas:', err);
+          reject(err);
+        });
+    });
+  } catch (err) {
+    console.warn('[WARN] Falha na contagem de linhas, usando valor padrão 10000.');
+    totalLines = 10000;
+  }
   
+  console.log('[DEBUG] Abrindo arquivo para leitura linha a linha...');
   const fileStream = fs.createReadStream(csvPath);
   const rl = readline.createInterface({
     input: fileStream,
@@ -152,53 +222,42 @@ async function importMunicipalities() {
   const batchSize = 100;
   let totalInserted = 0;
   let totalUpdated = 0;
+  const progressStep = 100;
 
-  await client.query('BEGIN');
-  
   try {
-    // Limpar tabela antes de importar
-    await client.query('DELETE FROM municipalities');
-    
+    // Não apagar a tabela antes de importar, apenas inserir/atualizar diferenças
     for await (const line of rl) {
       lineNumber++;
       if (!line.trim()) continue;
-      
       const data = processReferenceCSVLine(line);
-      
       if (data.codigo && data.descricao) {
         batch.push({ ...data, _line: lineNumber });
-        
-        if (batch.length >= batchSize) {
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+      }
+      if (batch.length >= batchSize || lineNumber % progressStep === 0 || lineNumber === totalLines) {
+        if (batch.length > 0) {
           const { inserted, updated } = await processMunicipalityBatch(batch);
           totalInserted += inserted;
           totalUpdated += updated;
           count += batch.length;
           batch = [];
-          
-          console.log(`📈 Municípios processados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
-      } else {
-        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+        const percent = ((lineNumber / totalLines) * 100).toFixed(1);
+        console.log(`📊 Progresso: ${lineNumber.toLocaleString()} / ${totalLines.toLocaleString()} linhas (${percent}%)`);
       }
     }
-    
-    // Processar último lote
     if (batch.length > 0) {
       const { inserted, updated } = await processMunicipalityBatch(batch);
       totalInserted += inserted;
       totalUpdated += updated;
       count += batch.length;
     }
-    
-    await client.query('COMMIT');
     console.log(`✅ Municípios importados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
-    
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('❌ Erro ao importar Municípios:', error.message);
     throw error;
   }
-  
   rl.close();
 }
 
@@ -212,17 +271,24 @@ async function processMunicipalityBatch(batch) {
   `;
   let inserted = 0;
   let updated = 0;
-  for (const item of batch) {
-    try {
-      const res = await client.query(query, [item.codigo, item.descricao]);
-      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
-        inserted++;
-      } else {
-        updated++;
+  await client.query('BEGIN');
+  try {
+    for (const item of batch) {
+      try {
+        const res = await client.query(query, [item.codigo, item.descricao]);
+        if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+          inserted++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
       }
-    } catch (err) {
-      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
     }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   }
   return { inserted, updated };
 }
@@ -232,7 +298,40 @@ async function importLegalNatures() {
   const csvPath = path.join(__dirname, '..', 'CNPJ_Matrix', 'naturezas.csv');
   
   console.log('⚖️ Importando Naturezas Jurídicas...');
+  console.log(`[DEBUG] Verificando existência do arquivo: ${csvPath}`);
+  if (!fs.existsSync(csvPath)) {
+    throw new Error(`[ERRO] Arquivo não encontrado: ${csvPath}`);
+  }
+  console.log('[DEBUG] Arquivo encontrado. Iniciando contagem de linhas...');
+
+  let totalLines = 0;
+  try {
+    totalLines = await new Promise((resolve, reject) => {
+      let lines = 0;
+      fs.createReadStream(csvPath)
+        .on('data', (buffer) => {
+          let idx = -1;
+          lines--;
+          do {
+            idx = buffer.indexOf(10, idx + 1);
+            lines++;
+          } while (idx !== -1);
+        })
+        .on('end', () => {
+          console.log(`[DEBUG] Contagem de linhas concluída: ${lines}`);
+          resolve(lines);
+        })
+        .on('error', (err) => {
+          console.error('[ERRO] Falha ao ler arquivo para contagem de linhas:', err);
+          reject(err);
+        });
+    });
+  } catch (err) {
+    console.warn('[WARN] Falha na contagem de linhas, usando valor padrão 10000.');
+    totalLines = 10000;
+  }
   
+  console.log('[DEBUG] Abrindo arquivo para leitura linha a linha...');
   const fileStream = fs.createReadStream(csvPath);
   const rl = readline.createInterface({
     input: fileStream,
@@ -242,56 +341,45 @@ async function importLegalNatures() {
   let count = 0;
   let batch = [];
   let lineNumber = 0;
-  const batchSize = 100;
+  const batchSize = 10;
   let totalInserted = 0;
   let totalUpdated = 0;
+  const progressStep = 10;
 
-  await client.query('BEGIN');
-  
   try {
-    // Limpar tabela antes de importar
-    await client.query('DELETE FROM legal_natures');
-    
+    // Não apagar a tabela antes de importar, apenas inserir/atualizar diferenças
     for await (const line of rl) {
       lineNumber++;
       if (!line.trim()) continue;
-      
       const data = processReferenceCSVLine(line);
-      
       if (data.codigo && data.descricao) {
         batch.push({ ...data, _line: lineNumber });
-        
-        if (batch.length >= batchSize) {
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+      }
+      if (batch.length >= batchSize || lineNumber % progressStep === 0 || lineNumber === totalLines) {
+        if (batch.length > 0) {
           const { inserted, updated } = await processLegalNatureBatch(batch);
           totalInserted += inserted;
           totalUpdated += updated;
           count += batch.length;
           batch = [];
-          
-          console.log(`📈 Naturezas Jurídicas processadas: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
-      } else {
-        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+        const percent = ((lineNumber / totalLines) * 100).toFixed(1);
+        console.log(`📊 Progresso: ${lineNumber.toLocaleString()} / ${totalLines.toLocaleString()} linhas (${percent}%)`);
       }
     }
-    
-    // Processar último lote
     if (batch.length > 0) {
       const { inserted, updated } = await processLegalNatureBatch(batch);
       totalInserted += inserted;
       totalUpdated += updated;
       count += batch.length;
     }
-    
-    await client.query('COMMIT');
     console.log(`✅ Naturezas Jurídicas importadas: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
-    
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('❌ Erro ao importar Naturezas Jurídicas:', error.message);
     throw error;
   }
-  
   rl.close();
 }
 
@@ -305,17 +393,24 @@ async function processLegalNatureBatch(batch) {
   `;
   let inserted = 0;
   let updated = 0;
-  for (const item of batch) {
-    try {
-      const res = await client.query(query, [item.codigo, item.descricao]);
-      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
-        inserted++;
-      } else {
-        updated++;
+  await client.query('BEGIN');
+  try {
+    for (const item of batch) {
+      try {
+        const res = await client.query(query, [item.codigo, item.descricao]);
+        if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+          inserted++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
       }
-    } catch (err) {
-      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
     }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   }
   return { inserted, updated };
 }
@@ -325,7 +420,12 @@ async function importMotivos() {
   const csvPath = path.join(__dirname, '..', 'CNPJ_Matrix', 'motivos.csv');
   
   console.log('📝 Importando Motivos de Situação Cadastral...');
-  
+  console.log(`[DEBUG] Verificando existência do arquivo: ${csvPath}`);
+  if (!fs.existsSync(csvPath)) {
+    throw new Error(`[ERRO] Arquivo não encontrado: ${csvPath}`);
+  }
+  console.log('[DEBUG] Arquivo encontrado. Iniciando contagem de linhas...');
+
   // Primeiro, vamos criar a tabela se não existir
   await client.query(`
     CREATE TABLE IF NOT EXISTS cadastral_situation_reasons (
@@ -333,7 +433,35 @@ async function importMotivos() {
       descricao TEXT
     )
   `);
+
+  let totalLines = 0;
+  try {
+    totalLines = await new Promise((resolve, reject) => {
+      let lines = 0;
+      fs.createReadStream(csvPath)
+        .on('data', (buffer) => {
+          let idx = -1;
+          lines--;
+          do {
+            idx = buffer.indexOf(10, idx + 1);
+            lines++;
+          } while (idx !== -1);
+        })
+        .on('end', () => {
+          console.log(`[DEBUG] Contagem de linhas concluída: ${lines}`);
+          resolve(lines);
+        })
+        .on('error', (err) => {
+          console.error('[ERRO] Falha ao ler arquivo para contagem de linhas:', err);
+          reject(err);
+        });
+    });
+  } catch (err) {
+    console.warn('[WARN] Falha na contagem de linhas, usando valor padrão 10000.');
+    totalLines = 10000;
+  }
   
+  console.log('[DEBUG] Abrindo arquivo para leitura linha a linha...');
   const fileStream = fs.createReadStream(csvPath);
   const rl = readline.createInterface({
     input: fileStream,
@@ -343,56 +471,45 @@ async function importMotivos() {
   let count = 0;
   let batch = [];
   let lineNumber = 0;
-  const batchSize = 100;
+  const batchSize = 10;
   let totalInserted = 0;
   let totalUpdated = 0;
+  const progressStep = 10;
 
-  await client.query('BEGIN');
-  
   try {
-    // Limpar tabela antes de importar
-    await client.query('DELETE FROM cadastral_situation_reasons');
-    
+    // Não apagar a tabela antes de importar, apenas inserir/atualizar diferenças
     for await (const line of rl) {
       lineNumber++;
       if (!line.trim()) continue;
-      
       const data = processReferenceCSVLine(line);
-      
       if (data.codigo !== null && data.descricao) {
         batch.push({ ...data, _line: lineNumber });
-        
-        if (batch.length >= batchSize) {
+      } else {
+        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+      }
+      if (batch.length >= batchSize || lineNumber % progressStep === 0 || lineNumber === totalLines) {
+        if (batch.length > 0) {
           const { inserted, updated } = await processMotivosBatch(batch);
           totalInserted += inserted;
           totalUpdated += updated;
           count += batch.length;
           batch = [];
-          
-          console.log(`📈 Motivos processados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
         }
-      } else {
-        console.warn(`⚠️ Linha ${lineNumber} ignorada: dados inválidos.`);
+        const percent = ((lineNumber / totalLines) * 100).toFixed(1);
+        console.log(`📊 Progresso: ${lineNumber.toLocaleString()} / ${totalLines.toLocaleString()} linhas (${percent}%)`);
       }
     }
-    
-    // Processar último lote
     if (batch.length > 0) {
       const { inserted, updated } = await processMotivosBatch(batch);
       totalInserted += inserted;
       totalUpdated += updated;
       count += batch.length;
     }
-    
-    await client.query('COMMIT');
     console.log(`✅ Motivos importados: ${count.toLocaleString()} (inseridos: ${totalInserted}, atualizados: ${totalUpdated})`);
-    
   } catch (error) {
-    await client.query('ROLLBACK');
     console.error('❌ Erro ao importar Motivos:', error.message);
     throw error;
   }
-  
   rl.close();
 }
 
@@ -406,17 +523,24 @@ async function processMotivosBatch(batch) {
   `;
   let inserted = 0;
   let updated = 0;
-  for (const item of batch) {
-    try {
-      const res = await client.query(query, [item.codigo, item.descricao]);
-      if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
-        inserted++;
-      } else {
-        updated++;
+  await client.query('BEGIN');
+  try {
+    for (const item of batch) {
+      try {
+        const res = await client.query(query, [item.codigo, item.descricao]);
+        if (res.rows && res.rows[0] && res.rows[0].xmax === '0') {
+          inserted++;
+        } else {
+          updated++;
+        }
+      } catch (err) {
+        console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
       }
-    } catch (err) {
-      console.error(`❌ Erro na linha ${item._line} (codigo: ${item.codigo}): ${err.message}`);
     }
+    await client.query('COMMIT');
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
   }
   return { inserted, updated };
 }
