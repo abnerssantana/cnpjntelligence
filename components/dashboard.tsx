@@ -163,7 +163,7 @@ export function Dash() {
         <CardHeader>
           <CardTitle>Buscar Empresa</CardTitle>
           <CardDescription>
-            Digite o CNPJ ou razão social da empresa
+            Digite o CNPJ ou razão social da empresa - Ex. 06.990.590/0001-23
           </CardDescription>
         </CardHeader>
         <CardContent>
