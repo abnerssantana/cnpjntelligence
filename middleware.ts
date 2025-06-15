@@ -1,41 +1,33 @@
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { withAuth } from "next-auth/middleware"
+import { NextResponse } from "next/server"
 
-// Add routes that require authentication
-const protectedRoutes = ['/dashboard']
-
-export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl
-
-  // Check if the route requires authentication
-  const isProtectedRoute = protectedRoutes.some(route => pathname.startsWith(route))
-
-  if (isProtectedRoute) {
-    // For now, we'll just check if there's a session cookie
-    // In production, you'd verify this with Supabase Auth
-    const sessionCookie = request.cookies.get('sb-access-token')
-    
-    if (!sessionCookie) {
-      // Redirect to login page
-      const loginUrl = new URL('/auth/login', request.url)
-      loginUrl.searchParams.set('redirectTo', pathname)
-      return NextResponse.redirect(loginUrl)
+export default withAuth(
+  function middleware(req) {
+    // Se o usuário não tem assinatura ativa e não está na página de assinatura
+    if (!req.nextauth.token?.isSubscriptionActive && !req.nextUrl.pathname.startsWith("/subscription")) {
+      return NextResponse.redirect(new URL("/subscription", req.url))
     }
+    
+    return NextResponse.next()
+  },
+  {
+    callbacks: {
+      authorized: ({ token }) => !!token
+    },
   }
+)
 
-  return NextResponse.next()
-}
-
+// Proteger todas as rotas exceto login, api/auth e arquivos estáticos
 export const config = {
   matcher: [
     /*
      * Match all request paths except for the ones starting with:
-     * - api (API routes)
+     * - api/auth (auth endpoints)
+     * - login (login page)
      * - _next/static (static files)
      * - _next/image (image optimization files)
      * - favicon.ico (favicon file)
-     * - public folder
      */
-    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
+    '/((?!api/auth|login|_next/static|_next/image|favicon.ico).*)',
   ],
 }

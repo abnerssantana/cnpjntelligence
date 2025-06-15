@@ -147,7 +147,7 @@ export function HomePage() {
               <span className="text-2xl font-bold">CNPJ Analytics</span>
             </div>
             <div className="flex items-center gap-4">
-              <Link href="/auth/login">
+              <Link href="/login">
                 <Button variant="ghost">Entrar</Button>
               </Link>
               <Link href="/auth/register">

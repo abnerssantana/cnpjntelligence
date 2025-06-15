@@ -1,0 +1,111 @@
+import { NextAuthOptions } from "next-auth"
+import NextAuth from "next-auth"
+import CredentialsProvider from "next-auth/providers/credentials"
+import { Client } from 'pg'
+import bcrypt from 'bcryptjs'
+
+export const authOptions: NextAuthOptions = {
+  providers: [
+    CredentialsProvider({
+      name: 'credentials',
+      credentials: {
+        email: { label: "Email", type: "email", placeholder: "seu@email.com" },
+        password: { label: "Senha", type: "password" }
+      },
+      async authorize(credentials) {
+        if (!credentials?.email || !credentials?.password) {
+          return null
+        }
+
+        const client = new Client({
+          connectionString: process.env.POSTGRES_URL
+        })
+
+        try {
+          await client.connect()
+          
+          // Buscar usuário no banco
+          const query = `
+            SELECT 
+              id, 
+              email, 
+              name, 
+              password_hash,
+              subscription_status, 
+              subscription_expires_at
+            FROM app_users 
+            WHERE email = $1
+          `
+          
+          const result = await client.query(query, [credentials.email])
+          
+          if (result.rows.length === 0) {
+            return null
+          }
+          
+          const user = result.rows[0]
+          
+          // Verificar senha
+          const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash)
+          
+          if (!isPasswordValid) {
+            return null
+          }
+          
+          // Verificar se a assinatura está ativa
+          const isSubscriptionActive = 
+            user.subscription_status === 'active' && 
+            new Date(user.subscription_expires_at) > new Date()
+          
+          // Retornar dados do usuário
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            subscriptionStatus: user.subscription_status,
+            subscriptionExpiresAt: user.subscription_expires_at,
+            isSubscriptionActive
+          }
+        } catch (error) {
+          console.error('Erro na autenticação:', error)
+          return null
+        } finally {
+          await client.end()
+        }
+      }
+    })
+  ],
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id
+        token.subscriptionStatus = user.subscriptionStatus
+        token.subscriptionExpiresAt = user.subscriptionExpiresAt
+        token.isSubscriptionActive = user.isSubscriptionActive
+      }
+      return token
+    },
+    async session({ session, token }) {
+      if (session?.user) {
+        session.user.id = token.id as string
+        session.user.subscriptionStatus = token.subscriptionStatus as string
+        session.user.subscriptionExpiresAt = token.subscriptionExpiresAt as string
+        session.user.isSubscriptionActive = token.isSubscriptionActive as boolean
+      }
+      return session
+    }
+  },
+  pages: {
+    signIn: '/login',
+    error: '/login',
+  },
+  session: {
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 dias
+  },
+  secret: process.env.NEXTAUTH_SECRET || process.env.SUPABASE_JWT_SECRET,
+}
+
+const handler = NextAuth(authOptions)
+
+export { handler as GET, handler as POST }
