@@ -3,11 +3,9 @@
 import * as React from "react"
 import {
   Building2,
-  Search,
-  History,
   BarChart3,
-  Settings,
 } from "lucide-react"
+import { useSession } from "next-auth/react"
 
 import { NavMain } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
@@ -20,41 +18,36 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar"
 
-// This is sample data.
-const data = {
-  user: {
-    name: "Usuário",
-    email: "usuario@cnpjntelligence.com",
-    avatar: "/avatars/user.jpg",
+const teams = [
+  {
+    name: "CNPJntelligence",
+    logo: Building2,
+    plan: "Free",
   },
-  teams: [
-    {
-      name: "CNPJntelligence",
-      logo: Building2,
-      plan: "Free",
-    },
-  ],
-  navMain: [
-    {
-      title: "Dashboard",
-      url: "/dashboard",
-      icon: BarChart3,
-      isActive: true,
-    }
-  ],
-}
+]
+
+const navItems = [
+  {
+    title: "Dashboard",
+    url: "/dashboard",
+    icon: BarChart3,
+    isActive: true,
+  }
+]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { data: session } = useSession()
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <TeamSwitcher teams={teams} />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={navItems} />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        {session?.user && <NavUser user={session.user} />}
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

@@ -83,36 +83,39 @@ export default function RegisterPage() {
 
   if (step === 3) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardContent className="text-center p-8">
-            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-            <h2 className="text-2xl font-bold mb-2">Conta Criada com Sucesso!</h2>
-            <p className="text-gray-600 mb-6">
-              Sua assinatura anual foi ativada. Você já pode começar a usar todas as funcionalidades.
-            </p>
-            <Button onClick={() => router.push("/dashboard")} className="w-full">
-              Acessar Dashboard
-            </Button>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="w-full max-w-md px-4">
+          <Card className="shadow-lg">
+            <CardContent className="text-center p-8">
+              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600" />
+              </div>
+              <h2 className="text-2xl font-bold mb-2">Conta Criada com Sucesso!</h2>
+              <p className="text-muted-foreground mb-6">
+                Sua assinatura anual foi ativada. Você já pode começar a usar todas as funcionalidades.
+              </p>
+              <Button onClick={() => router.push("/dashboard")} className="w-full">
+                Acessar Dashboard
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     )
   }
 
   if (step === 2) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Card className="w-full max-w-md">
-          <CardHeader className="text-center">
-            <div className="flex justify-center mb-4">
-              <CreditCard className="h-12 w-12 text-blue-600" />
-            </div>
-            <CardTitle className="text-2xl">Finalizar Assinatura</CardTitle>
-            <CardDescription>Complete seu pagamento para ativar a conta</CardDescription>
-          </CardHeader>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+        <div className="w-full max-w-md px-4">
+          <Card className="shadow-lg">
+            <CardHeader className="text-center">
+              <div className="flex justify-center mb-4">
+                <CreditCard className="h-12 w-12 text-primary" />
+              </div>
+              <CardTitle className="text-2xl">Finalizar Assinatura</CardTitle>
+              <CardDescription>Complete seu pagamento para ativar a conta</CardDescription>
+            </CardHeader>
           <CardContent className="space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="flex justify-between items-center mb-2">
@@ -147,23 +150,30 @@ export default function RegisterPage() {
               {loading ? "Processando..." : "Pagar R$ 89,00"}
             </Button>
 
-            <p className="text-xs text-center text-gray-600">🔒 Pagamento 100% seguro • Dados criptografados</p>
+            <p className="text-xs text-center text-muted-foreground">🔒 Pagamento 100% seguro • Dados criptografados</p>
           </CardContent>
         </Card>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="w-full max-w-md space-y-8 px-4">
+        <div className="flex flex-col items-center space-y-2">
+          <div className="flex items-center space-x-2">
+            <Building2 className="h-8 w-8 text-primary" />
+            <h1 className="text-2xl font-bold">CNPJntelligence</h1>
           </div>
-          <CardTitle className="text-2xl">Criar Conta</CardTitle>
-          <CardDescription>Comece seu teste grátis de 7 dias</CardDescription>
-        </CardHeader>
+          <p className="text-muted-foreground">Inteligência de dados empresariais</p>
+        </div>
+        
+        <Card className="shadow-lg">
+          <CardHeader className="text-center">
+            <CardTitle className="text-2xl">Criar Conta</CardTitle>
+            <CardDescription>Comece seu teste grátis de 7 dias</CardDescription>
+          </CardHeader>
         <CardContent>
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
@@ -261,7 +271,7 @@ export default function RegisterPage() {
           <div className="mt-6 text-center">
             <p className="text-sm text-muted-foreground">
               Já tem uma conta?{" "}
-              <Link href="/auth/login" className="text-blue-600 hover:underline">
+              <Link href="/login" className="text-primary hover:underline font-medium">
                 Faça login
               </Link>
             </p>
@@ -277,6 +287,7 @@ export default function RegisterPage() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   )
 }

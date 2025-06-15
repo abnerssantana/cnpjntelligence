@@ -5,17 +5,19 @@ export default withAuth(
   function middleware(req) {
     const token = req.nextauth.token
     const isAuth = !!token
-    const isAuthPage = req.nextUrl.pathname === "/" || req.nextUrl.pathname.startsWith("/auth")
-
-    if (isAuthPage) {
-      if (isAuth) {
-        return NextResponse.redirect(new URL("/dashboard", req.url))
-      }
-      return null
+    const pathname = req.nextUrl.pathname
+    
+    // Páginas públicas de autenticação
+    const isAuthPage = pathname === "/login" || pathname.startsWith("/auth")
+    
+    // Se está em página de auth e já está autenticado, redireciona para dashboard
+    if (isAuthPage && isAuth) {
+      return NextResponse.redirect(new URL("/dashboard", req.url))
     }
-
-    if (!isAuth) {
-      return NextResponse.redirect(new URL("/", req.url))
+    
+    // Se não está autenticado e não está em página de auth, redireciona para login
+    if (!isAuth && !isAuthPage) {
+      return NextResponse.redirect(new URL("/login", req.url))
     }
 
     return NextResponse.next()
@@ -27,10 +29,17 @@ export default withAuth(
   }
 )
 
-// Proteger rotas e redirecionar conforme necessário
+// Proteger rotas específicas
 export const config = {
   matcher: [
-    '/',
-    '/dashboard/:path*',
+    /*
+     * Match all request paths except for the ones starting with:
+     * - api (API routes)
+     * - _next/static (static files)
+     * - _next/image (image optimization files)
+     * - favicon.ico (favicon file)
+     * - public folder
+     */
+    '/((?!api|_next/static|_next/image|favicon.ico|public).*)',
   ],
 }
