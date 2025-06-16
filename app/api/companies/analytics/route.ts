@@ -9,36 +9,33 @@ export async function GET(request: NextRequest) {
     
     const supabase = getSupabaseClient()
     
-    // Build base query for empresas table
-    let baseQuery = supabase.from('empresas').select('*', { count: 'exact' })
-    
-    // Apply state filter if provided
+    // Get total companies count (optimized)
+    let totalCompaniesQuery = supabase.from('empresas').select('id', { count: 'exact', head: true })
     if (uf && uf !== 'all') {
-      baseQuery = baseQuery.eq('uf', uf)
+      totalCompaniesQuery = totalCompaniesQuery.eq('uf', uf)
     }
-    
-    // Get total companies count
-    const { count: totalCompanies } = await baseQuery
-    
-    // Get active companies count
-    let activeQuery = supabase
+    const { count: totalCompanies } = await totalCompaniesQuery
+
+    // Get active companies count (optimized)
+    let activeCompaniesQuery = supabase
       .from('empresas')
-      .select('*', { count: 'exact' })
+      .select('id', { count: 'exact', head: true })
       .eq('situacao_cadastral', 2)
-    
     if (uf && uf !== 'all') {
-      activeQuery = activeQuery.eq('uf', uf)
+      activeCompaniesQuery = activeCompaniesQuery.eq('uf', uf)
     }
-    
-    const { count: activeCompanies } = await activeQuery
-    
-    // Get companies by state
-    const { data: allCompanies } = await supabase
+    const { count: activeCompanies } = await activeCompaniesQuery
+
+    // Get companies by state (optimized)
+    let stateQuery = supabase
       .from('empresas')
-      .select('uf, situacao_cadastral')
+      .select('uf, situacao_cadastral', { count: 'exact' })
       .not('uf', 'is', null)
-    
-    const stateGroups = allCompanies?.reduce((acc: any, curr) => {
+    if (uf && uf !== 'all') {
+      stateQuery = stateQuery.eq('uf', uf)
+    }
+    const { data: stateData } = await stateQuery
+    const stateGroups = stateData?.reduce((acc: any, curr) => {
       const state = curr.uf
       if (!acc[state]) {
         acc[state] = { uf: state, total: 0, active: 0 }
@@ -49,44 +46,41 @@ export async function GET(request: NextRequest) {
       }
       return acc
     }, {})
-    
     const companiesByState = Object.values(stateGroups || {})
       .sort((a: any, b: any) => b.total - a.total)
       .slice(0, 10)
-    
-    // Get companies by size
-    const { data: sizeData } = await supabase
+
+    // Get companies by size (optimized)
+    let sizeQuery = supabase
       .from('empresas')
-      .select('porte')
+      .select('porte', { count: 'exact' })
       .not('porte', 'is', null)
-    
+    if (uf && uf !== 'all') {
+      sizeQuery = sizeQuery.eq('uf', uf)
+    }
+    const { data: sizeData } = await sizeQuery
     const sizeGroups = sizeData?.reduce((acc: any, curr) => {
       const porte = curr.porte || 'Não Informado'
-      
       if (!acc[porte]) {
         acc[porte] = { porte, total: 0, percentage: 0 }
       }
       acc[porte].total++
       return acc
     }, {})
-    
     const companiesBySize = Object.values(sizeGroups || {})
     const totalForPercentage = companiesBySize.reduce((sum: number, item: any) => sum + item.total, 0)
     companiesBySize.forEach((item: any) => {
       item.percentage = (item.total / totalForPercentage) * 100
     })
-    
-    // Get companies by status
+
+    // Get companies by status (optimized)
     let statusQuery = supabase
       .from('empresas')
-      .select('situacao_cadastral, descricao_situacao_cadastral')
-    
+      .select('descricao_situacao_cadastral', { count: 'exact' })
     if (uf && uf !== 'all') {
       statusQuery = statusQuery.eq('uf', uf)
     }
-    
     const { data: statusData } = await statusQuery
-    
     const statusMap: Record<string, { total: number; color: string }> = {
       'ATIVA': { total: 0, color: '#10b981' },
       'BAIXADA': { total: 0, color: '#ef4444' },
@@ -94,14 +88,12 @@ export async function GET(request: NextRequest) {
       'INAPTA': { total: 0, color: '#6b7280' },
       'NULA': { total: 0, color: '#9ca3af' }
     }
-    
     statusData?.forEach((item) => {
       const status = item.descricao_situacao_cadastral?.toUpperCase() || 'NULA'
       if (statusMap[status]) {
         statusMap[status].total++
       }
     })
-    
     const companiesByStatus = Object.entries(statusMap)
       .map(([status, data]) => ({
         status: status.charAt(0) + status.slice(1).toLowerCase(),
@@ -109,30 +101,25 @@ export async function GET(request: NextRequest) {
         color: data.color
       }))
       .filter(item => item.total > 0)
-    
-    // Get companies by sector (CNAE)
+
+    // Get companies by sector (optimized)
     let cnaeQuery = supabase
       .from('empresas')
-      .select('cnae_fiscal, cnae_fiscal_descricao')
+      .select('cnae_fiscal, cnae_fiscal_descricao', { count: 'exact' })
       .not('cnae_fiscal', 'is', null)
-    
     if (uf && uf !== 'all') {
       cnaeQuery = cnaeQuery.eq('uf', uf)
     }
-    
     const { data: cnaeData } = await cnaeQuery
-    
     const sectorGroups = cnaeData?.reduce((acc: any, curr) => {
       const cnae = curr.cnae_fiscal
       const description = curr.cnae_fiscal_descricao || `CNAE ${cnae}`
-      
       if (!acc[cnae]) {
         acc[cnae] = { setor: description, total: 0, codigo: cnae }
       }
       acc[cnae].total++
       return acc
     }, {})
-    
     const companiesBySector = Object.values(sectorGroups || {})
       .sort((a: any, b: any) => b.total - a.total)
       .slice(0, 10)
@@ -148,6 +135,10 @@ export async function GET(request: NextRequest) {
       companiesBySector,
       companiesByStatus,
       monthlyGrowth,
+    }, {
+      headers: {
+        'Cache-Control': 's-maxage=600, stale-while-revalidate=60'
+      }
     })
   } catch (error) {
     console.error('Analytics error:', error)

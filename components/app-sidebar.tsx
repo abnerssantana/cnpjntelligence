@@ -37,12 +37,6 @@ const navItems = [
     title: "Dashboard",
     url: "/dashboard",
     icon: BarChart3,
-    isActive: true,
-  },
-  {
-    title: "Buscar Empresas",
-    url: "/dashboard/search",
-    icon: Search,
   },
   {
     title: "Relatórios",
