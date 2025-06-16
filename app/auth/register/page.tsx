@@ -83,12 +83,12 @@ export default function RegisterPage() {
 
   if (step === 3) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-full max-w-md px-4">
           <Card className="shadow-lg">
             <CardContent className="text-center p-8">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+              <div className="w-16 h-16 bg-green-100 dark:bg-green-950 rounded-full flex items-center justify-center mx-auto mb-4">
+                <CheckCircle className="h-8 w-8 text-green-600 dark:text-green-400" />
               </div>
               <h2 className="text-2xl font-bold mb-2">Conta Criada com Sucesso!</h2>
               <p className="text-muted-foreground mb-6">
@@ -106,7 +106,7 @@ export default function RegisterPage() {
 
   if (step === 2) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-full max-w-md px-4">
           <Card className="shadow-lg">
             <CardHeader className="text-center">
@@ -117,12 +117,12 @@ export default function RegisterPage() {
               <CardDescription>Complete seu pagamento para ativar a conta</CardDescription>
             </CardHeader>
           <CardContent className="space-y-6">
-            <div className="bg-blue-50 p-4 rounded-lg">
+            <div className="bg-blue-50 dark:bg-blue-950 p-4 rounded-lg">
               <div className="flex justify-between items-center mb-2">
                 <span className="font-medium">Plano Anual</span>
                 <span className="text-2xl font-bold">R$ 89,00</span>
               </div>
-              <p className="text-sm text-gray-600">Cobrança única • Renovação automática</p>
+              <p className="text-sm text-gray-600 dark:text-gray-400">Cobrança única • Renovação automática</p>
             </div>
 
             <div className="space-y-4">
@@ -159,7 +159,7 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-full max-w-md space-y-8 px-4">
         <div className="flex flex-col items-center space-y-2">
           <div className="flex items-center space-x-2">
@@ -277,11 +277,10 @@ export default function RegisterPage() {
             </p>
           </div>
 
-          <div className="mt-4 p-4 bg-green-50 rounded-lg">
-            <h3 className="font-semibold text-green-900 mb-2">✨ Teste Grátis por 7 Dias</h3>
-            <ul className="text-xs text-green-700 space-y-1">
+          <div className="mt-4 p-4 bg-green-50 dark:bg-green-950 rounded-lg">
+            <h3 className="font-semibold text-green-900 dark:text-green-100 mb-2">Teste Grátis por 7 Dias</h3>
+            <ul className="text-xs text-green-700 dark:text-green-300 space-y-1">
               <li>• Acesso completo a todas as funcionalidades</li>
-              <li>• Sem compromisso • Cancele quando quiser</li>
               <li>• Após o teste: apenas R$ 89/ano</li>
             </ul>
           </div>

@@ -44,13 +44,13 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen flex items-center justify-center bg-background">
+      <Card className="w-full max-w-md shadow-lg">
         <CardHeader className="text-center">
           <div className="flex justify-center mb-4">
-            <Building2 className="h-12 w-12 text-blue-600" />
+            <Building2 className="h-12 w-12 text-blue-600 dark:text-blue-400" />
           </div>
-          <CardTitle className="text-2xl">CNPJ Analytics</CardTitle>
+          <CardTitle className="text-2xl">CNPJntelligence</CardTitle>
           <CardDescription>Faça login para acessar sua conta</CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,10 +107,10 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="mt-4 p-4 bg-blue-50 rounded-lg">
-            <h3 className="font-semibold text-blue-900 mb-2">Plano Anual</h3>
-            <p className="text-sm text-blue-700 mb-2">Acesso completo por apenas R$ 89/ano</p>
-            <ul className="text-xs text-blue-600 space-y-1">
+          <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg">
+            <h3 className="font-semibold text-blue-900 dark:text-blue-100 mb-2">Plano Anual</h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mb-2">Acesso completo por apenas R$ 89/ano</p>
+            <ul className="text-xs text-blue-600 dark:text-blue-400 space-y-1">
               <li>• Análise de 4GB+ de dados CNPJ</li>
               <li>• Filtros avançados por região e CNAE</li>
               <li>• Identificação de concorrentes</li>

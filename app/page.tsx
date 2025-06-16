@@ -2,14 +2,13 @@ import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ThemeToggle } from "@/components/theme-toggle"
 import { Building2, Search, BarChart3, CheckCircle, ArrowRight, Database } from "lucide-react"
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
+    <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="border-b border-gray-200 dark:border-gray-700 bg-white/80 dark:bg-gray-900/80 backdrop-blur-sm">
+      <header className="border-b bg-background/95 backdrop-blur-sm">
         <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
@@ -41,7 +40,7 @@ export default function Page() {
             <Database className="h-4 w-4 mr-2" />
             23+ milhões de empresas brasileiras
           </Badge>
-          <h2 className="text-6xl font-bold mb-6 text-foreground leading-tight">
+          <h2 className="text-5xl font-bold mb-6 text-foreground leading-tight">
             Encontre qualquer empresa do Brasil
           </h2>
           <p className="text-xl text-muted-foreground mb-10 max-w-2xl mx-auto leading-relaxed">
@@ -59,7 +58,7 @@ export default function Page() {
       </section>
 
       {/* Features */}
-      <section className="py-20 px-6 bg-white dark:bg-gray-900">
+      <section className="py-20 px-6 bg-background">
         <div className="container mx-auto max-w-4xl">
           <div className="grid md:grid-cols-3 gap-8">
             <div className="text-center">
@@ -131,17 +130,13 @@ export default function Page() {
                   Começar Agora
                 </Button>
               </Link>
-              
-              <p className="text-sm text-muted-foreground mt-4">
-                Cancele quando quiser
-              </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 dark:border-gray-700 py-8 px-6 bg-white dark:bg-gray-900">
+      <footer className="border-t py-8 px-6 bg-background">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="flex items-center gap-3">
