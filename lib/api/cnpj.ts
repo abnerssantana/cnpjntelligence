@@ -271,3 +271,24 @@ export async function getEmpresasStats() {
     };
   }
 }
+
+/**
+ * Get latest companies added to the database
+ */
+export async function getLatestEmpresas(limit: number = 5) {
+  try {
+    const supabase = getSupabaseClient();
+    const { data, error } = await supabase
+      .from('empresas')
+      .select('*')
+      .order('created_at', { ascending: false })
+      .limit(limit);
+
+    if (error) throw error;
+
+    return data || [];
+  } catch (error) {
+    console.error('Error getting latest empresas:', error);
+    return [];
+  }
+}

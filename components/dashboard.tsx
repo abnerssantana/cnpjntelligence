@@ -18,9 +18,10 @@ import {
   AlertCircle,
   Clock,
   Shield,
-  Activity
+  Activity,
+  X
 } from 'lucide-react';
-import { getEmpresaByCNPJ, searchEmpresas, getEmpresasStats } from '@/lib/api/cnpj';
+import { getEmpresaByCNPJ, searchEmpresas, getEmpresasStats, getLatestEmpresas } from '@/lib/api/cnpj';
 import { formatCNPJ, formatCurrency, formatDate } from '@/lib/utils';
 import { toast } from 'sonner';
 
@@ -59,6 +60,8 @@ export function Dash() {
   const [loadingStats, setLoadingStats] = useState(true);
   const [empresas, setEmpresas] = useState<any[]>([]);
   const [selectedEmpresa, setSelectedEmpresa] = useState<any>(null);
+  const [latestEmpresas, setLatestEmpresas] = useState<any[]>([]);
+  const [loadingLatest, setLoadingLatest] = useState(true);
   const [stats, setStats] = useState({
     total: 0,
     ativas: 0
@@ -66,6 +69,7 @@ export function Dash() {
 
   useEffect(() => {
     loadStats();
+    loadLatestEmpresas();
   }, []);
 
   const loadStats = async () => {
@@ -79,6 +83,17 @@ export function Dash() {
       console.error('Error loading stats:', error);
     } finally {
       setLoadingStats(false);
+    }
+  };
+
+  const loadLatestEmpresas = async () => {
+    try {
+      const data = await getLatestEmpresas(5);
+      setLatestEmpresas(data);
+    } catch (error) {
+      console.error('Error loading latest empresas:', error);
+    } finally {
+      setLoadingLatest(false);
     }
   };
 
@@ -123,6 +138,12 @@ export function Dash() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const clearSearch = () => {
+    setSearchTerm('');
+    setEmpresas([]);
+    setSelectedEmpresa(null);
   };
 
   return (
@@ -213,13 +234,25 @@ export function Dash() {
         </CardHeader>
         <CardContent>
           <div className="flex gap-3">
-            <Input
-              placeholder="CNPJ ou Razão Social..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1"
-            />
+            <div className="relative flex-1">
+              <Input
+                placeholder="CNPJ ou Razão Social..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
+                className="pr-10"
+              />
+              {(searchTerm || empresas.length > 0 || selectedEmpresa) && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={clearSearch}
+                  className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 p-0 hover:bg-gray-100 dark:hover:bg-gray-800"
+                >
+                  <X className="h-4 w-4" />
+                </Button>
+              )}
+            </div>
             <Button 
               onClick={handleSearch} 
               disabled={loading}
@@ -235,6 +268,43 @@ export function Dash() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Latest Companies - Show only when no search is active */}
+      {!loading && empresas.length === 0 && !selectedEmpresa && latestEmpresas.length > 0 && (
+        <Card className="shadow-sm">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Clock className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              Últimas Empresas Adicionadas
+            </CardTitle>
+            <CardDescription className="text-muted-foreground">
+              {latestEmpresas.length} empresa{latestEmpresas.length > 1 ? 's' : ''} recente{latestEmpresas.length > 1 ? 's' : ''}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {latestEmpresas.map((empresa) => (
+                <div
+                  key={empresa.id}
+                  className="flex items-center justify-between p-4 rounded-lg border hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 cursor-pointer transition-all duration-200"
+                  onClick={() => setSelectedEmpresa(empresa)}
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold text-foreground">{empresa.razao_social}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      CNPJ: {formatCNPJ(empresa.cnpj)} • {empresa.municipio}/{empresa.uf}
+                    </p>
+                  </div>
+                  <div className={`flex items-center gap-2 px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(empresa.situacao_cadastral)}`}>
+                    {getStatusIcon(empresa.situacao_cadastral)}
+                    {empresa.descricao_situacao_cadastral}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Results */}
       {empresas.length > 0 && !selectedEmpresa && (
