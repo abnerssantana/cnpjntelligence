@@ -1,7 +1,7 @@
 import { NextAuthOptions } from "next-auth"
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
-import { Client } from 'pg'
+import { createClient } from '@supabase/supabase-js'
 import crypto from 'crypto'
 
 // Verificação de variáveis críticas em produção
@@ -39,68 +39,55 @@ export const authOptions: NextAuthOptions = {
           return null
         }
 
-        const client = new Client({
-          connectionString: process.env.POSTGRES_URL,
-          ssl: { rejectUnauthorized: false }
-        })
+        // Instanciar o client do Supabase
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL!,
+          process.env.SUPABASE_SERVICE_ROLE_KEY!
+        )
 
         try {
-          console.log('[NextAuth] Conectando ao banco de dados...')
-          await client.connect()
-          console.log('[NextAuth] Conexão estabelecida')
-          
-          // Buscar usuário no banco - tabela correta é 'users'
-          const query = `
-            SELECT 
-              id, 
-              email, 
-              name, 
-              password_hash,
-              subscription_status,
-              subscription_expires_at
-            FROM users 
-            WHERE email = $1
-          `
-          
-          const result = await client.query(query, [credentials.email])
-          
-          console.log('[NextAuth] Resultado da busca:', {
-            found: result.rows.length > 0,
-            email: credentials.email
-          })
-          
-          if (result.rows.length === 0) {
+          // Buscar usuário no Supabase
+          const { data: user, error } = await supabase
+            .from('users')
+            .select('*')
+            .eq('email', credentials.email)
+            .single()
+
+          if (error) {
+            console.error('[NextAuth][Supabase] Erro ao buscar usuário:', error)
+            return null
+          }
+
+          if (!user) {
             console.log('[NextAuth] Usuário não encontrado')
             return null
           }
-          
-          const user = result.rows[0]
-          
+
           // Verificar senha usando SHA256 (mesmo método usado nos scripts)
           const inputHash = crypto.createHash('sha256').update(credentials.password).digest('hex')
           const isPasswordValid = inputHash === user.password_hash
-          
+
           console.log('[NextAuth] Validação de senha:', {
             isValid: isPasswordValid,
             userId: user.id,
             method: 'SHA256'
           })
-          
+
           if (!isPasswordValid) {
             console.log('[NextAuth] Senha inválida')
             return null
           }
-          
+
           // Verificar se a assinatura está ativa
           const isSubscriptionActive = user.subscription_status === 'active' && 
                                      new Date(user.subscription_expires_at) > new Date()
-          
+
           console.log('[NextAuth] Status da assinatura:', {
             status: user.subscription_status,
             expiresAt: user.subscription_expires_at,
             isActive: isSubscriptionActive
           })
-          
+
           // Retornar dados do usuário
           console.log('[NextAuth] Autenticação bem-sucedida para:', user.email)
           return {
@@ -115,9 +102,6 @@ export const authOptions: NextAuthOptions = {
             timestamp: new Date().toISOString()
           })
           return null
-        } finally {
-          await client.end()
-          console.log('[NextAuth] Conexão com banco fechada')
         }
       }
     })
