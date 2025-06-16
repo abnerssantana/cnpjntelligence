@@ -53,7 +53,7 @@ interface DashboardData {
   activeCompanies: number
   companiesByState: Array<{ uf: string; total: number; active: number }>
   companiesBySize: Array<{ porte: string; total: number; percentage: number }>
-  companiesBySector: Array<{ setor: string; total: number }>
+  companiesBySector: Array<{ setor: string; total: number; codigo?: string }>
   companiesByStatus: Array<{ status: string; total: number; color: string }>
   monthlyGrowth: Array<{ month: string; total: number; new: number }>
 }
