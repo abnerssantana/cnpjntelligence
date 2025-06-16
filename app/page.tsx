@@ -1,26 +1,32 @@
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Building2, Filter, BarChart3, MapPin, Briefcase, TrendingUp, Check, Database, Zap } from "lucide-react"
+import { Building2, Search, BarChart3, CheckCircle, ArrowRight, Database } from "lucide-react"
 
 export default function Page() {
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       {/* Header */}
-      <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto px-4 py-4">
+      <header className="border-b border-gray-200 bg-white/80 backdrop-blur-sm">
+        <div className="container mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-8 w-8 text-primary" />
-              <h1 className="text-2xl font-bold">CNPJntelligence</h1>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Building2 className="h-6 w-6 text-white" />
+              </div>
+              <h1 className="text-2xl font-bold text-gray-900">CNPJntelligence</h1>
             </div>
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-3">
               <Link href="/login">
-                <Button variant="ghost">Entrar</Button>
+                <Button variant="ghost" className="text-gray-600 hover:text-gray-900">
+                  Entrar
+                </Button>
               </Link>
-              <Link href="#pricing">
-                <Button>Assinar Agora</Button>
+              <Link href="/login">
+                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                  Começar Agora
+                </Button>
               </Link>
             </div>
           </div>
@@ -28,265 +34,122 @@ export default function Page() {
       </header>
 
       {/* Hero Section */}
-      <section className="py-20 px-4">
+      <section className="py-24 px-6">
         <div className="container mx-auto text-center max-w-4xl">
-          <Badge className="mb-4" variant="secondary">
-            Base de dados com mais de 23 milhões de empresas
+          <Badge className="mb-6 px-4 py-2 bg-green-50 text-green-700 border-green-200">
+            <Database className="h-4 w-4 mr-2" />
+            23+ milhões de empresas brasileiras
           </Badge>
-          <h2 className="text-5xl font-bold mb-6 bg-gradient-to-r from-primary to-primary/60 bg-clip-text text-transparent">
-            Inteligência de Mercado com Dados de CNPJs
+          <h2 className="text-6xl font-bold mb-6 text-gray-900 leading-tight">
+            Encontre qualquer empresa do Brasil
           </h2>
-          <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-            Filtre e analise empresas por estado, cidade, porte, categoria e CNAE. 
-            Identifique oportunidades, concorrentes e tendências de mercado.
+          <p className="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Busque, filtre e analise dados completos de CNPJs. 
+            Simples, rápido e direto ao ponto.
           </p>
-          <div className="flex gap-4 justify-center">
-            <Link href="#pricing">
-              <Button size="lg" className="gap-2">
-                <Zap className="h-5 w-5" />
-                Começar Agora - R$ 89/ano
-              </Button>
-            </Link>
-            <Link href="#features">
-              <Button size="lg" variant="outline">
-                Ver Recursos
-              </Button>
-            </Link>
-          </div>
+          <Link href="/login">
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 text-lg gap-3">
+              <Search className="h-5 w-5" />
+              Buscar Empresas Agora
+              <ArrowRight className="h-5 w-5" />
+            </Button>
+          </Link>
         </div>
       </section>
 
       {/* Features */}
-      <section id="features" className="py-20 px-4 bg-muted/30">
-        <div className="container mx-auto">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">
-              Ferramentas Poderosas de Análise
-            </h3>
-            <p className="text-muted-foreground max-w-2xl mx-auto">
-              Acesse dados completos e atualizados para tomar decisões estratégicas
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6 mb-12">
-            <Card className="border-primary/20">
-              <CardHeader>
-                <Filter className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Filtros Avançados</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Filtrar por Estado e Cidade
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Segmentar por Porte da Empresa
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Buscar por CNAE específico
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Cruzar múltiplos filtros
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardHeader>
-                <BarChart3 className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Indicadores de Mercado</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Empresas abertas vs fechadas
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Análise de concorrência
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Tendências por região
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Estatísticas por CNAE
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-primary/20">
-              <CardHeader>
-                <Database className="h-10 w-10 text-primary mb-2" />
-                <CardTitle>Base Completa</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-muted-foreground">
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Dados da Receita Federal
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Atualizações periódicas
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    Exportação de dados
-                  </li>
-                  <li className="flex items-center gap-2">
-                    <Check className="h-4 w-4 text-primary" />
-                    API para integração
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Use Cases */}
-          <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <MapPin className="h-8 w-8 text-primary flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold mb-1">Análise Regional</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Identifique oportunidades de negócio por região, analisando a 
-                    concentração de empresas e setores em crescimento.
-                  </p>
-                </div>
+      <section className="py-20 px-6 bg-white">
+        <div className="container mx-auto max-w-4xl">
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="text-center">
+              <div className="p-4 bg-blue-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <Search className="h-8 w-8 text-blue-600" />
               </div>
-              <div className="flex gap-4">
-                <Briefcase className="h-8 w-8 text-primary flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold mb-1">Prospecção B2B</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Encontre potenciais clientes filtrando por porte, setor e 
-                    localização para suas campanhas de vendas.
-                  </p>
-                </div>
-              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Busca Inteligente</h3>
+              <p className="text-gray-600">
+                Encontre empresas por CNPJ, razão social ou filtros avançados
+              </p>
             </div>
-            <div className="space-y-4">
-              <div className="flex gap-4">
-                <TrendingUp className="h-8 w-8 text-primary flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold mb-1">Análise Competitiva</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Monitore concorrentes diretos através de CNAEs similares e 
-                    acompanhe o crescimento do setor.
-                  </p>
-                </div>
+            
+            <div className="text-center">
+              <div className="p-4 bg-green-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <BarChart3 className="h-8 w-8 text-green-600" />
               </div>
-              <div className="flex gap-4">
-                <BarChart3 className="h-8 w-8 text-primary flex-shrink-0" />
-                <div>
-                  <h4 className="font-semibold mb-1">Estudos de Mercado</h4>
-                  <p className="text-sm text-muted-foreground">
-                    Gere relatórios detalhados sobre setores específicos para 
-                    embasar decisões estratégicas.
-                  </p>
-                </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Dados Completos</h3>
+              <p className="text-gray-600">
+                Informações atualizadas da Receita Federal em tempo real
+              </p>
+            </div>
+            
+            <div className="text-center">
+              <div className="p-4 bg-purple-50 rounded-full w-16 h-16 mx-auto mb-4 flex items-center justify-center">
+                <CheckCircle className="h-8 w-8 text-purple-600" />
               </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">Simples de Usar</h3>
+              <p className="text-gray-600">
+                Interface intuitiva, sem complicações ou curva de aprendizado
+              </p>
             </div>
           </div>
         </div>
       </section>
 
       {/* Pricing */}
-      <section id="pricing" className="py-20 px-4">
-        <div className="container mx-auto max-w-4xl">
-          <div className="text-center mb-12">
-            <h3 className="text-3xl font-bold mb-4">
-              Plano Simples e Transparente
-            </h3>
-            <p className="text-muted-foreground">
-              Acesso completo a todas as funcionalidades por um preço justo
-            </p>
-          </div>
-
-          <Card className="max-w-md mx-auto border-primary/20">
-            <CardHeader className="text-center pb-8">
-              <CardTitle className="text-2xl mb-2">Acesso Anual</CardTitle>
-              <div className="flex items-baseline justify-center gap-1">
-                <span className="text-4xl font-bold">R$ 89</span>
-                <span className="text-muted-foreground">/ano</span>
+      <section className="py-20 px-6 bg-gray-50">
+        <div className="container mx-auto max-w-2xl text-center">
+          <h3 className="text-4xl font-bold text-gray-900 mb-4">
+            R$ 89/ano
+          </h3>
+          <p className="text-xl text-gray-600 mb-8">
+            Acesso completo. Sem limites. Sem complicações.
+          </p>
+          
+          <Card className="border-0 shadow-lg bg-white">
+            <CardContent className="p-8">
+              <div className="space-y-4 mb-8">
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">23+ milhões de empresas brasileiras</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Busca ilimitada por CNPJ e razão social</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Dados atualizados da Receita Federal</span>
+                </div>
+                <div className="flex items-center gap-3">
+                  <CheckCircle className="h-5 w-5 text-green-600 flex-shrink-0" />
+                  <span className="text-gray-700">Suporte por email</span>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <ul className="space-y-3">
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Acesso ilimitado à base de dados</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Todos os filtros e segmentações</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Indicadores e análises em tempo real</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Exportação de dados em Excel/CSV</span>
-                </li>
-                <li className="flex items-center gap-3">
-                  <Check className="h-5 w-5 text-primary flex-shrink-0" />
-                  <span>Suporte por email</span>
-                </li>
-              </ul>
-              <div className="pt-4">
-                <Link href="/login" className="block">
-                  <Button size="lg" className="w-full">
-                    Assinar Agora
-                  </Button>
-                </Link>
-                <p className="text-center text-sm text-muted-foreground mt-4">
-                  Cancele quando quiser • Garantia de 7 dias
-                </p>
-              </div>
+              
+              <Link href="/login">
+                <Button size="lg" className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 text-lg">
+                  Começar Agora
+                </Button>
+              </Link>
+              
+              <p className="text-sm text-gray-500 mt-4">
+                Cancele quando quiser
+              </p>
             </CardContent>
           </Card>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="py-20 px-4 bg-muted/30">
-        <div className="container mx-auto text-center max-w-2xl">
-          <h3 className="text-3xl font-bold mb-4">
-            Transforme Dados em Decisões Inteligentes
-          </h3>
-          <p className="text-xl text-muted-foreground mb-8">
-            Junte-se a milhares de empresários e analistas que já utilizam o 
-            CNPJntelligence para impulsionar seus negócios.
-          </p>
-          <Link href="/login">
-            <Button size="lg" className="gap-2">
-              <Building2 className="h-5 w-5" />
-              Começar Teste Gratuito
-            </Button>
-          </Link>
-        </div>
-      </section>
-
       {/* Footer */}
-      <footer className="border-t py-8 px-4">
+      <footer className="border-t border-gray-200 py-8 px-6 bg-white">
         <div className="container mx-auto">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-2">
-              <Building2 className="h-6 w-6 text-primary" />
-              <span className="font-semibold">CNPJntelligence</span>
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-600 rounded-lg">
+                <Building2 className="h-5 w-5 text-white" />
+              </div>
+              <span className="font-bold text-gray-900">CNPJntelligence</span>
             </div>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-500">
               &copy; 2024 CNPJntelligence. Todos os direitos reservados.
             </p>
           </div>
