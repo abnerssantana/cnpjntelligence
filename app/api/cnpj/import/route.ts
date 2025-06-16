@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabaseAdmin } from '@/lib/supabase';
+import { getSupabaseAdmin } from '@/lib/supabase-singleton';
 import axios from 'axios';
 import https from 'https';
 
@@ -15,6 +15,7 @@ const axiosInstance = axios.create({
 export async function POST(request: NextRequest) {
   try {
     const { cnpj } = await request.json();
+    const supabaseAdmin = getSupabaseAdmin();
     
     if (!cnpj) {
       return NextResponse.json(

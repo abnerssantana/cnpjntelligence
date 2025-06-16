@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { getSupabaseClient } from '@/lib/supabase-singleton';
 
 const CACHE_DURATION_DAYS = 7; // Revalidate data after 7 days
 
@@ -51,6 +51,7 @@ export interface EmpresaCnae {
 export async function getEmpresaByCNPJ(cnpj: string): Promise<Empresa | null> {
   try {
     const cleanCnpj = cnpj.replace(/\D/g, '');
+    const supabase = getSupabaseClient();
     
     // Check local database first
     const { data: empresa, error } = await supabase
@@ -105,6 +106,7 @@ export async function searchEmpresas(params: {
   offset?: number;
 }) {
   try {
+    const supabase = getSupabaseClient();
     let query = supabase.from('empresas').select('*', { count: 'exact' });
 
     // Apply filters
@@ -156,6 +158,7 @@ export async function searchEmpresas(params: {
  */
 export async function getEmpresasBySocio(nomeSocio: string) {
   try {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('empresa_socios')
       .select(`
@@ -178,6 +181,7 @@ export async function getEmpresasBySocio(nomeSocio: string) {
  */
 export async function getEmpresasByCnaeSecundario(codigoCnae: number) {
   try {
+    const supabase = getSupabaseClient();
     const { data, error } = await supabase
       .from('empresa_cnaes_secundarios')
       .select(`
@@ -219,6 +223,7 @@ async function fetchFromAPI(cnpj: string): Promise<Empresa | null> {
 
     if (result.success) {
       // Fetch the updated data from database
+      const supabase = getSupabaseClient();
       const { data } = await supabase
         .from('empresas')
         .select(`
@@ -244,6 +249,7 @@ async function fetchFromAPI(cnpj: string): Promise<Empresa | null> {
  */
 export async function getEmpresasStats() {
   try {
+    const supabase = getSupabaseClient();
     const { count: total } = await supabase
       .from('empresas')
       .select('*', { count: 'exact', head: true });

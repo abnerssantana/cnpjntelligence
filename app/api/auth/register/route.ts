@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseAdmin } from '@/lib/supabase'
+import { getSupabaseAdmin } from '@/lib/supabase-singleton'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
     const { name, email, password } = body
+    const supabaseAdmin = getSupabaseAdmin()
 
     // Validação básica
     if (!name || !email || !password) {

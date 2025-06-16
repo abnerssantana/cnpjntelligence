@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabaseServer } from '@/lib/supabaseServer'
+import { getSupabaseAdmin } from '@/lib/supabase-singleton'
 import * as XLSX from 'xlsx'
 
 export async function POST(request: NextRequest) {
   try {
     const filters = await request.json()
+    const supabaseServer = getSupabaseAdmin()
     
     // Build query
     let query = supabaseServer
