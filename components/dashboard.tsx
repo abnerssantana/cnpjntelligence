@@ -28,11 +28,11 @@ import { toast } from 'sonner';
 // Helper functions for status styling
 const getStatusColor = (situacao: number) => {
   switch (situacao) {
-    case 2: return 'text-green-600 bg-green-50 border-green-200';
-    case 3: return 'text-red-600 bg-red-50 border-red-200';
-    case 4: return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-    case 8: return 'text-gray-600 bg-gray-50 border-gray-200';
-    default: return 'text-gray-600 bg-gray-50 border-gray-200';
+    case 2: return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950 dark:border-green-800';
+    case 3: return 'text-red-600 bg-red-50 border-red-200 dark:text-red-400 dark:bg-red-950 dark:border-red-800';
+    case 4: return 'text-yellow-600 bg-yellow-50 border-yellow-200 dark:text-yellow-400 dark:bg-yellow-950 dark:border-yellow-800';
+    case 8: return 'text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-950 dark:border-gray-800';
+    default: return 'text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-950 dark:border-gray-800';
   }
 };
 
@@ -47,11 +47,11 @@ const getStatusIcon = (situacao: number) => {
 };
 
 const getPorteColor = (porte: string) => {
-  if (porte?.toLowerCase().includes('grande')) return 'text-purple-600 bg-purple-50 border-purple-200';
-  if (porte?.toLowerCase().includes('médio')) return 'text-blue-600 bg-blue-50 border-blue-200';
-  if (porte?.toLowerCase().includes('pequeno')) return 'text-green-600 bg-green-50 border-green-200';
-  if (porte?.toLowerCase().includes('micro')) return 'text-orange-600 bg-orange-50 border-orange-200';
-  return 'text-gray-600 bg-gray-50 border-gray-200';
+  if (porte?.toLowerCase().includes('grande')) return 'text-purple-600 bg-purple-50 border-purple-200 dark:text-purple-400 dark:bg-purple-950 dark:border-purple-800';
+  if (porte?.toLowerCase().includes('médio')) return 'text-blue-600 bg-blue-50 border-blue-200 dark:text-blue-400 dark:bg-blue-950 dark:border-blue-800';
+  if (porte?.toLowerCase().includes('pequeno')) return 'text-green-600 bg-green-50 border-green-200 dark:text-green-400 dark:bg-green-950 dark:border-green-800';
+  if (porte?.toLowerCase().includes('micro')) return 'text-orange-600 bg-orange-50 border-orange-200 dark:text-orange-400 dark:bg-orange-950 dark:border-orange-800';
+  return 'text-gray-600 bg-gray-50 border-gray-200 dark:text-gray-400 dark:bg-gray-950 dark:border-gray-800';
 };
 
 export function Dash() {
@@ -132,16 +132,16 @@ export function Dash() {
       <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
         <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Total de Empresas</CardTitle>
-            <div className="p-2 bg-blue-50 rounded-lg">
-              <Building2 className="h-4 w-4 text-blue-600" />
+            <CardTitle className="text-sm font-medium text-foreground/70">Total de Empresas</CardTitle>
+            <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded-lg">
+              <Building2 className="h-4 w-4 text-blue-600 dark:text-blue-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-gray-900">
-              {loadingStats ? <Loader2 className="h-6 w-6 animate-spin text-blue-600" /> : stats.total.toLocaleString('pt-BR')}
+            <div className="text-2xl font-bold text-foreground">
+              {loadingStats ? <Loader2 className="h-6 w-6 animate-spin text-blue-600 dark:text-blue-400" /> : stats.total.toLocaleString('pt-BR')}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Cadastradas no sistema
             </p>
           </CardContent>
@@ -149,16 +149,16 @@ export function Dash() {
 
         <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Empresas Ativas</CardTitle>
-            <div className="p-2 bg-green-50 rounded-lg">
-              <Activity className="h-4 w-4 text-green-600" />
+            <CardTitle className="text-sm font-medium text-foreground/70">Empresas Ativas</CardTitle>
+            <div className="p-2 bg-green-50 dark:bg-green-950 rounded-lg">
+              <Activity className="h-4 w-4 text-green-600 dark:text-green-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-700">
-              {loadingStats ? <Loader2 className="h-6 w-6 animate-spin text-green-600" /> : stats.ativas.toLocaleString('pt-BR')}
+            <div className="text-2xl font-bold text-green-700 dark:text-green-400">
+              {loadingStats ? <Loader2 className="h-6 w-6 animate-spin text-green-600 dark:text-green-400" /> : stats.ativas.toLocaleString('pt-BR')}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Situação cadastral ativa
             </p>
           </CardContent>
@@ -166,18 +166,18 @@ export function Dash() {
 
         <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Taxa de Atividade</CardTitle>
-            <div className="p-2 bg-purple-50 rounded-lg">
-              <TrendingUp className="h-4 w-4 text-purple-600" />
+            <CardTitle className="text-sm font-medium text-foreground/70">Taxa de Atividade</CardTitle>
+            <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded-lg">
+              <TrendingUp className="h-4 w-4 text-purple-600 dark:text-purple-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-purple-700">
-              {loadingStats ? <Loader2 className="h-6 w-6 animate-spin text-purple-600" /> : 
+            <div className="text-2xl font-bold text-purple-700 dark:text-purple-400">
+              {loadingStats ? <Loader2 className="h-6 w-6 animate-spin text-purple-600 dark:text-purple-400" /> : 
                 stats.total > 0 ? `${((stats.ativas / stats.total) * 100).toFixed(1)}%` : '0%'
               }
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Empresas ativas vs total
             </p>
           </CardContent>
@@ -185,16 +185,16 @@ export function Dash() {
 
         <Card className="border-l-4 border-l-orange-500 hover:shadow-md transition-shadow">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-gray-700">Última Atualização</CardTitle>
-            <div className="p-2 bg-orange-50 rounded-lg">
-              <Calendar className="h-4 w-4 text-orange-600" />
+            <CardTitle className="text-sm font-medium text-foreground/70">Última Atualização</CardTitle>
+            <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded-lg">
+              <Calendar className="h-4 w-4 text-orange-600 dark:text-orange-400" />
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-orange-700">
+            <div className="text-2xl font-bold text-orange-700 dark:text-orange-400">
               {new Date().toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}
             </div>
-            <p className="text-xs text-gray-500 mt-1">
+            <p className="text-xs text-muted-foreground mt-1">
               Dados sincronizados
             </p>
           </CardContent>
@@ -202,13 +202,13 @@ export function Dash() {
       </div>
 
       {/* Search Section */}
-      <Card className="shadow-sm border-0 bg-gradient-to-r from-blue-50 to-indigo-50">
+      <Card className="shadow-sm bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/20 dark:to-indigo-950/20 border-blue-200 dark:border-blue-800">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-gray-800">
-            <Search className="h-5 w-5 text-blue-600" />
+          <CardTitle className="flex items-center gap-2 text-foreground">
+            <Search className="h-5 w-5 text-blue-600 dark:text-blue-400" />
             Buscar Empresa
           </CardTitle>
-          <CardDescription className="text-gray-600">
+          <CardDescription className="text-muted-foreground">
             Digite o CNPJ ou razão social da empresa - Ex. 06.990.590/0001-23
           </CardDescription>
         </CardHeader>
@@ -219,12 +219,12 @@ export function Dash() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="flex-1 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+              className="flex-1"
             />
             <Button 
               onClick={handleSearch} 
               disabled={loading}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6"
+              className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 text-white px-6"
             >
               {loading ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -241,11 +241,11 @@ export function Dash() {
       {empresas.length > 0 && !selectedEmpresa && (
         <Card className="shadow-sm">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-gray-800">
-              <Building2 className="h-5 w-5 text-blue-600" />
+            <CardTitle className="flex items-center gap-2 text-foreground">
+              <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
               Resultados da Busca
             </CardTitle>
-            <CardDescription className="text-gray-600">
+            <CardDescription className="text-muted-foreground">
               {empresas.length} empresa{empresas.length > 1 ? 's' : ''} encontrada{empresas.length > 1 ? 's' : ''}
             </CardDescription>
           </CardHeader>
@@ -254,12 +254,12 @@ export function Dash() {
               {empresas.map((empresa) => (
                 <div
                   key={empresa.id}
-                  className="flex items-center justify-between p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 cursor-pointer transition-all duration-200"
+                  className="flex items-center justify-between p-4 rounded-lg border hover:border-blue-300 dark:hover:border-blue-600 hover:bg-blue-50/50 dark:hover:bg-blue-950/20 cursor-pointer transition-all duration-200"
                   onClick={() => setSelectedEmpresa(empresa)}
                 >
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-900">{empresa.razao_social}</p>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="font-semibold text-foreground">{empresa.razao_social}</p>
+                    <p className="text-sm text-muted-foreground mt-1">
                       CNPJ: {formatCNPJ(empresa.cnpj)} • {empresa.municipio}/{empresa.uf}
                     </p>
                   </div>
@@ -276,13 +276,13 @@ export function Dash() {
 
       {/* Selected Company Details */}
       {selectedEmpresa && (
-        <Card className="shadow-lg border-0">
-          <CardHeader className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-t-lg">
+        <Card className="shadow-lg">
+          <CardHeader className="bg-gradient-to-r from-muted/50 to-muted/80 rounded-t-lg">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <CardTitle className="text-2xl text-gray-900 mb-2">{selectedEmpresa.razao_social}</CardTitle>
+                <CardTitle className="text-2xl text-foreground mb-2">{selectedEmpresa.razao_social}</CardTitle>
                 {selectedEmpresa.nome_fantasia && (
-                  <CardDescription className="text-lg text-gray-700 font-medium">
+                  <CardDescription className="text-lg text-muted-foreground font-medium">
                     {selectedEmpresa.nome_fantasia}
                   </CardDescription>
                 )}
@@ -297,7 +297,6 @@ export function Dash() {
                     variant="outline"
                     size="sm"
                     onClick={() => setSelectedEmpresa(null)}
-                    className="border-gray-300 hover:bg-gray-50"
                   >
                     Ver Lista
                   </Button>
@@ -307,40 +306,40 @@ export function Dash() {
           </CardHeader>
           <CardContent className="space-y-8 p-6">
             {/* Basic Info */}
-            <div className="bg-white rounded-lg border border-gray-100 p-6">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <Building2 className="h-5 w-5 text-blue-600" />
+            <div className="bg-card rounded-lg border p-6">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-foreground">
+                <div className="p-2 bg-blue-50 dark:bg-blue-950 rounded-lg">
+                  <Building2 className="h-5 w-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 Informações Básicas
               </h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">CNPJ</p>
-                  <p className="font-semibold text-gray-900 text-lg">{formatCNPJ(selectedEmpresa.cnpj)}</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">CNPJ</p>
+                  <p className="font-semibold text-foreground text-lg">{formatCNPJ(selectedEmpresa.cnpj)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Natureza Jurídica</p>
-                  <p className="font-semibold text-gray-900">{selectedEmpresa.natureza_juridica}</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Natureza Jurídica</p>
+                  <p className="font-semibold text-foreground">{selectedEmpresa.natureza_juridica}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Capital Social</p>
-                  <p className="font-semibold text-gray-900 text-lg">{formatCurrency(selectedEmpresa.capital_social)}</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Capital Social</p>
+                  <p className="font-semibold text-foreground text-lg">{formatCurrency(selectedEmpresa.capital_social)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Porte</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Porte</p>
                   <div className={`inline-flex items-center px-3 py-1 rounded-full border text-sm font-medium ${getPorteColor(selectedEmpresa.porte)}`}>
                     <Shield className="h-4 w-4 mr-1" />
                     {selectedEmpresa.porte}
                   </div>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Início das Atividades</p>
-                  <p className="font-semibold text-gray-900">{formatDate(selectedEmpresa.data_inicio_atividade)}</p>
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Início das Atividades</p>
+                  <p className="font-semibold text-foreground">{formatDate(selectedEmpresa.data_inicio_atividade)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Situação Cadastral</p>
-                  <p className="font-semibold text-gray-900">
+                  <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Situação Cadastral</p>
+                  <p className="font-semibold text-foreground">
                     {selectedEmpresa.descricao_situacao_cadastral} desde {formatDate(selectedEmpresa.data_situacao_cadastral)}
                   </p>
                 </div>
@@ -348,42 +347,42 @@ export function Dash() {
             </div>
 
             {/* Address */}
-            <div className="bg-white rounded-lg border border-gray-100 p-6">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <MapPin className="h-5 w-5 text-green-600" />
+            <div className="bg-card rounded-lg border p-6">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-foreground">
+                <div className="p-2 bg-green-50 dark:bg-green-950 rounded-lg">
+                  <MapPin className="h-5 w-5 text-green-600 dark:text-green-400" />
                 </div>
                 Endereço
               </h3>
               <div className="space-y-3">
-                <p className="text-gray-900 font-medium text-lg">
+                <p className="text-foreground font-medium text-lg">
                   {selectedEmpresa.logradouro}, {selectedEmpresa.numero}
                   {selectedEmpresa.complemento && ` - ${selectedEmpresa.complemento}`}
                 </p>
-                <p className="text-gray-700 font-medium">{selectedEmpresa.bairro}</p>
-                <p className="text-gray-700 font-medium">
+                <p className="text-foreground/80 font-medium">{selectedEmpresa.bairro}</p>
+                <p className="text-foreground/80 font-medium">
                   {selectedEmpresa.municipio} - {selectedEmpresa.uf} - CEP: {selectedEmpresa.cep}
                 </p>
                 {selectedEmpresa.email && (
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-sm font-medium text-gray-500 uppercase tracking-wide">Email</p>
-                    <p className="text-blue-600 font-medium">{selectedEmpresa.email}</p>
+                  <div className="pt-2 border-t">
+                    <p className="text-sm font-medium text-muted-foreground uppercase tracking-wide">Email</p>
+                    <p className="text-blue-600 dark:text-blue-400 font-medium">{selectedEmpresa.email}</p>
                   </div>
                 )}
               </div>
             </div>
 
             {/* Main Activity */}
-            <div className="bg-white rounded-lg border border-gray-100 p-6">
-              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <FileText className="h-5 w-5 text-purple-600" />
+            <div className="bg-card rounded-lg border p-6">
+              <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-foreground">
+                <div className="p-2 bg-purple-50 dark:bg-purple-950 rounded-lg">
+                  <FileText className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                 </div>
                 Atividade Principal
               </h3>
-              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-4 rounded-lg border border-purple-200">
-                <p className="font-bold text-purple-900 text-lg mb-2">{selectedEmpresa.cnae_fiscal}</p>
-                <p className="text-gray-700 font-medium leading-relaxed">
+              <div className="bg-gradient-to-r from-purple-50 to-indigo-50 dark:from-purple-950/20 dark:to-indigo-950/20 p-4 rounded-lg border border-purple-200 dark:border-purple-800">
+                <p className="font-bold text-purple-900 dark:text-purple-100 text-lg mb-2">{selectedEmpresa.cnae_fiscal}</p>
+                <p className="text-foreground/80 font-medium leading-relaxed">
                   {selectedEmpresa.cnae_fiscal_descricao}
                 </p>
               </div>
@@ -391,29 +390,29 @@ export function Dash() {
 
             {/* Partners */}
             {selectedEmpresa.empresa_socios && selectedEmpresa.empresa_socios.length > 0 && (
-              <div className="bg-white rounded-lg border border-gray-100 p-6">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-gray-800">
-                  <div className="p-2 bg-orange-50 rounded-lg">
-                    <Users className="h-5 w-5 text-orange-600" />
+              <div className="bg-card rounded-lg border p-6">
+                <h3 className="font-bold text-lg mb-4 flex items-center gap-2 text-foreground">
+                  <div className="p-2 bg-orange-50 dark:bg-orange-950 rounded-lg">
+                    <Users className="h-5 w-5 text-orange-600 dark:text-orange-400" />
                   </div>
                   Quadro Societário
                 </h3>
                 <div className="space-y-4">
                   {selectedEmpresa.empresa_socios.map((socio: any, index: number) => (
-                    <div key={index} className="bg-gradient-to-r from-orange-50 to-yellow-50 p-4 rounded-lg border border-orange-200">
-                      <p className="font-bold text-gray-900 text-lg mb-2">{socio.nome_socio}</p>
+                    <div key={index} className="bg-gradient-to-r from-orange-50 to-yellow-50 dark:from-orange-950/20 dark:to-yellow-950/20 p-4 rounded-lg border border-orange-200 dark:border-orange-800">
+                      <p className="font-bold text-foreground text-lg mb-2">{socio.nome_socio}</p>
                       <div className="flex flex-wrap gap-4 text-sm">
                         <div className="flex items-center gap-1">
-                          <span className="font-medium text-gray-500">Qualificação:</span>
-                          <span className="text-gray-700 font-medium">{socio.qualificacao_socio}</span>
+                          <span className="font-medium text-muted-foreground">Qualificação:</span>
+                          <span className="text-foreground/80 font-medium">{socio.qualificacao_socio}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="font-medium text-gray-500">Faixa Etária:</span>
-                          <span className="text-gray-700 font-medium">{socio.faixa_etaria}</span>
+                          <span className="font-medium text-muted-foreground">Faixa Etária:</span>
+                          <span className="text-foreground/80 font-medium">{socio.faixa_etaria}</span>
                         </div>
                         <div className="flex items-center gap-1">
-                          <span className="font-medium text-gray-500">Entrada:</span>
-                          <span className="text-gray-700 font-medium">{formatDate(socio.data_entrada_sociedade)}</span>
+                          <span className="font-medium text-muted-foreground">Entrada:</span>
+                          <span className="text-foreground/80 font-medium">{formatDate(socio.data_entrada_sociedade)}</span>
                         </div>
                       </div>
                     </div>
@@ -422,11 +421,11 @@ export function Dash() {
               </div>
             )}
 
-            <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+            <div className="bg-muted/50 rounded-lg p-4 border">
               <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <p className="text-sm font-medium text-gray-600">
-                  Última atualização: <span className="text-gray-800">{formatDate(selectedEmpresa.last_api_sync)}</span>
+                <Clock className="h-4 w-4 text-muted-foreground" />
+                <p className="text-sm font-medium text-muted-foreground">
+                  Última atualização: <span className="text-foreground">{formatDate(selectedEmpresa.last_api_sync)}</span>
                 </p>
               </div>
             </div>
