@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { Client } from 'pg'
+import { supabaseAdmin } from '@/lib/supabase'
 import bcrypt from 'bcryptjs'
 
 export async function POST(request: NextRequest) {
@@ -15,45 +15,51 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const client = new Client({
-      connectionString: process.env.POSTGRES_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
-    })
-
     try {
-      await client.connect()
-      
       // Verificar se o email já existe
-      const checkQuery = 'SELECT id FROM app_users WHERE email = $1'
-      const checkResult = await client.query(checkQuery, [email])
+      const { data: existingUser } = await supabaseAdmin
+        .from('app_users')
+        .select('id')
+        .eq('email', email)
+        .single()
       
-      if (checkResult.rows.length > 0) {
+      if (existingUser) {
         return NextResponse.json(
           { error: 'Este email já está cadastrado' },
           { status: 400 }
         )
       }
-      
-      // Hash da senha
-      const passwordHash = await bcrypt.hash(password, 10)
-      
-      // Inserir novo usuário
-      const insertQuery = `
-        INSERT INTO app_users (name, email, password_hash, created_at, updated_at)
-        VALUES ($1, $2, $3, NOW(), NOW())
-        RETURNING id, name, email
-      `
-      
-      const result = await client.query(insertQuery, [name, email, passwordHash])
-      
-      return NextResponse.json({
-        success: true,
-        user: result.rows[0]
-      })
-      
-    } finally {
-      await client.end()
+    } catch (error: any) {
+      // Se o erro for porque não encontrou usuário existente, isso é esperado
+      if (error?.code !== 'PGRST116') {
+        throw error
+      }
     }
+    
+    // Hash da senha
+    const passwordHash = await bcrypt.hash(password, 10)
+    
+    // Inserir novo usuário
+    const { data: newUser, error: insertError } = await supabaseAdmin
+      .from('app_users')
+      .insert({
+        name,
+        email,
+        password_hash: passwordHash,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select('id, name, email')
+      .single()
+    
+    if (insertError) {
+      throw insertError
+    }
+    
+    return NextResponse.json({
+      success: true,
+      user: newUser
+    })
   } catch (error) {
     console.error('Erro ao registrar usuário:', error)
     return NextResponse.json(

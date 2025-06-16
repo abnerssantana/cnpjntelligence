@@ -1,8 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { Client } from 'pg';
+import { supabaseAdmin } from '@/lib/supabase';
 import axios from 'axios';
+import https from 'https';
 
 const API_BASE_URL = 'https://minhareceita.org';
+
+// Create axios instance with custom HTTPS agent to handle SSL issues
+const axiosInstance = axios.create({
+  httpsAgent: new https.Agent({
+    rejectUnauthorized: false // This will accept self-signed certificates
+  })
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -22,7 +30,7 @@ export async function POST(request: NextRequest) {
     const formattedCnpj = cleanCnpj.replace(/(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})/, '$1.$2.$3/$4-$5');
     
     // Fetch from API
-    const response = await axios.get(`${API_BASE_URL}/${formattedCnpj}`);
+    const response = await axiosInstance.get(`${API_BASE_URL}/${formattedCnpj}`);
     const apiData = response.data;
     
     if (!apiData || !apiData.cnpj) {
@@ -32,119 +40,95 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Connect to database
-    const client = new Client({
-      connectionString: process.env.POSTGRES_URL,
-      ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : false
-    });
-    
-    await client.connect();
-    
     try {
-      // Start transaction
-      await client.query('BEGIN');
-      
-      // Upsert empresa
-      const upsertQuery = `
-        INSERT INTO empresas (
-          cnpj, razao_social, nome_fantasia, logradouro, numero, complemento,
-          bairro, municipio, uf, cep, email, porte, natureza_juridica,
-          capital_social, cnae_fiscal, cnae_fiscal_descricao, situacao_cadastral,
-          descricao_situacao_cadastral, data_situacao_cadastral, data_inicio_atividade,
-          last_api_sync
-        ) VALUES (
-          $1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
-          $17, $18, $19, $20, $21
-        )
-        ON CONFLICT (cnpj) DO UPDATE SET
-          razao_social = EXCLUDED.razao_social,
-          nome_fantasia = EXCLUDED.nome_fantasia,
-          logradouro = EXCLUDED.logradouro,
-          numero = EXCLUDED.numero,
-          complemento = EXCLUDED.complemento,
-          bairro = EXCLUDED.bairro,
-          municipio = EXCLUDED.municipio,
-          uf = EXCLUDED.uf,
-          cep = EXCLUDED.cep,
-          email = EXCLUDED.email,
-          porte = EXCLUDED.porte,
-          natureza_juridica = EXCLUDED.natureza_juridica,
-          capital_social = EXCLUDED.capital_social,
-          cnae_fiscal = EXCLUDED.cnae_fiscal,
-          cnae_fiscal_descricao = EXCLUDED.cnae_fiscal_descricao,
-          situacao_cadastral = EXCLUDED.situacao_cadastral,
-          descricao_situacao_cadastral = EXCLUDED.descricao_situacao_cadastral,
-          data_situacao_cadastral = EXCLUDED.data_situacao_cadastral,
-          data_inicio_atividade = EXCLUDED.data_inicio_atividade,
-          last_api_sync = EXCLUDED.last_api_sync
-        RETURNING id
-      `;
-      
-      const empresaResult = await client.query(upsertQuery, [
-        cleanCnpj,
-        apiData.razao_social,
-        apiData.nome_fantasia || '',
-        apiData.logradouro || '',
-        apiData.numero || '',
-        apiData.complemento || '',
-        apiData.bairro || '',
-        apiData.municipio || '',
-        apiData.uf || '',
-        apiData.cep || '',
-        apiData.email,
-        apiData.porte || '',
-        apiData.natureza_juridica || '',
-        apiData.capital_social || 0,
-        apiData.cnae_fiscal || 0,
-        apiData.cnae_fiscal_descricao || '',
-        apiData.situacao_cadastral || 0,
-        apiData.descricao_situacao_cadastral || '',
-        apiData.data_situacao_cadastral || null,
-        apiData.data_inicio_atividade || null,
-        new Date().toISOString()
-      ]);
-      
-      const empresaId = empresaResult.rows[0].id;
+      // Prepare empresa data
+      const empresaData = {
+        cnpj: cleanCnpj,
+        razao_social: apiData.razao_social,
+        nome_fantasia: apiData.nome_fantasia || '',
+        logradouro: apiData.logradouro || '',
+        numero: apiData.numero || '',
+        complemento: apiData.complemento || '',
+        bairro: apiData.bairro || '',
+        municipio: apiData.municipio || '',
+        uf: apiData.uf || '',
+        cep: apiData.cep || '',
+        email: apiData.email,
+        porte: apiData.porte || '',
+        natureza_juridica: apiData.natureza_juridica || '',
+        capital_social: apiData.capital_social || 0,
+        cnae_fiscal: apiData.cnae_fiscal || 0,
+        cnae_fiscal_descricao: apiData.cnae_fiscal_descricao || '',
+        situacao_cadastral: apiData.situacao_cadastral || 0,
+        descricao_situacao_cadastral: apiData.descricao_situacao_cadastral || '',
+        data_situacao_cadastral: apiData.data_situacao_cadastral || null,
+        data_inicio_atividade: apiData.data_inicio_atividade || null,
+        last_api_sync: new Date().toISOString()
+      };
+
+      // Upsert empresa using Supabase
+      const { data: empresa, error: empresaError } = await supabaseAdmin
+        .from('empresas')
+        .upsert(empresaData, {
+          onConflict: 'cnpj',
+          ignoreDuplicates: false
+        })
+        .select()
+        .single();
+
+      if (empresaError) {
+        throw empresaError;
+      }
+
+      const empresaId = empresa.id;
       
       // Delete existing socios and cnaes_secundarios
-      await client.query('DELETE FROM empresa_socios WHERE empresa_id = $1', [empresaId]);
-      await client.query('DELETE FROM empresa_cnaes_secundarios WHERE empresa_id = $1', [empresaId]);
+      await supabaseAdmin
+        .from('empresa_socios')
+        .delete()
+        .eq('empresa_id', empresaId);
+      
+      await supabaseAdmin
+        .from('empresa_cnaes_secundarios')
+        .delete()
+        .eq('empresa_id', empresaId);
       
       // Insert socios if available
       if (apiData.qsa && apiData.qsa.length > 0) {
-        for (const socio of apiData.qsa) {
-          await client.query(`
-            INSERT INTO empresa_socios (
-              empresa_id, nome_socio, cnpj_cpf_do_socio, qualificacao_socio,
-              data_entrada_sociedade, faixa_etaria
-            ) VALUES ($1, $2, $3, $4, $5, $6)
-          `, [
-            empresaId,
-            socio.nome_socio,
-            socio.cnpj_cpf_do_socio || '',
-            socio.qualificacao_socio || '',
-            socio.data_entrada_sociedade || null,
-            socio.faixa_etaria || ''
-          ]);
+        const sociosData = apiData.qsa.map((socio: any) => ({
+          empresa_id: empresaId,
+          nome_socio: socio.nome_socio,
+          cnpj_cpf_do_socio: socio.cnpj_cpf_do_socio || '',
+          qualificacao_socio: socio.qualificacao_socio || '',
+          data_entrada_sociedade: socio.data_entrada_sociedade || null,
+          faixa_etaria: socio.faixa_etaria || ''
+        }));
+
+        const { error: sociosError } = await supabaseAdmin
+          .from('empresa_socios')
+          .insert(sociosData);
+
+        if (sociosError) {
+          throw sociosError;
         }
       }
       
       // Insert CNAEs secundarios if available
       if (apiData.cnaes_secundarios && apiData.cnaes_secundarios.length > 0) {
-        for (const cnae of apiData.cnaes_secundarios) {
-          await client.query(`
-            INSERT INTO empresa_cnaes_secundarios (
-              empresa_id, codigo, descricao
-            ) VALUES ($1, $2, $3)
-          `, [
-            empresaId,
-            cnae.codigo,
-            cnae.descricao
-          ]);
+        const cnaesData = apiData.cnaes_secundarios.map((cnae: any) => ({
+          empresa_id: empresaId,
+          codigo: cnae.codigo,
+          descricao: cnae.descricao
+        }));
+
+        const { error: cnaesError } = await supabaseAdmin
+          .from('empresa_cnaes_secundarios')
+          .insert(cnaesData);
+
+        if (cnaesError) {
+          throw cnaesError;
         }
       }
-      
-      await client.query('COMMIT');
       
       return NextResponse.json({ 
         success: true,
@@ -153,10 +137,7 @@ export async function POST(request: NextRequest) {
       });
       
     } catch (error) {
-      await client.query('ROLLBACK');
       throw error;
-    } finally {
-      await client.end();
     }
     
   } catch (error: any) {

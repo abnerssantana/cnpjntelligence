@@ -22,7 +22,7 @@ const teams = [
   {
     name: "CNPJntelligence",
     logo: Building2,
-    plan: "Free",
+    plan: "Inteligência de Mercado",
   },
 ]
 
