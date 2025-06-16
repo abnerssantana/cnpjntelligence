@@ -41,9 +41,7 @@ export const authOptions: NextAuthOptions = {
 
         const client = new Client({
           connectionString: process.env.POSTGRES_URL,
-          ssl: process.env.NODE_ENV === 'production' 
-            ? { rejectUnauthorized: false } // Importante: false para Supabase
-            : false
+          ssl: { rejectUnauthorized: false }
         })
 
         try {
