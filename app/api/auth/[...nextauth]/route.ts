@@ -2,7 +2,7 @@ import { NextAuthOptions } from "next-auth"
 import NextAuth from "next-auth"
 import CredentialsProvider from "next-auth/providers/credentials"
 import { Client } from 'pg'
-import bcrypt from 'bcryptjs'
+import crypto from 'crypto'
 
 // Verificação de variáveis críticas em produção
 if (process.env.NODE_ENV === 'production') {
@@ -51,14 +51,16 @@ export const authOptions: NextAuthOptions = {
           await client.connect()
           console.log('[NextAuth] Conexão estabelecida')
           
-          // Buscar usuário no banco
+          // Buscar usuário no banco - tabela correta é 'users'
           const query = `
             SELECT 
               id, 
               email, 
               name, 
-              password_hash
-            FROM app_users 
+              password_hash,
+              subscription_status,
+              subscription_expires_at
+            FROM users 
             WHERE email = $1
           `
           
@@ -76,18 +78,30 @@ export const authOptions: NextAuthOptions = {
           
           const user = result.rows[0]
           
-          // Verificar senha
-          const isPasswordValid = await bcrypt.compare(credentials.password, user.password_hash)
+          // Verificar senha usando SHA256 (mesmo método usado nos scripts)
+          const inputHash = crypto.createHash('sha256').update(credentials.password).digest('hex')
+          const isPasswordValid = inputHash === user.password_hash
           
           console.log('[NextAuth] Validação de senha:', {
             isValid: isPasswordValid,
-            userId: user.id
+            userId: user.id,
+            method: 'SHA256'
           })
           
           if (!isPasswordValid) {
             console.log('[NextAuth] Senha inválida')
             return null
           }
+          
+          // Verificar se a assinatura está ativa
+          const isSubscriptionActive = user.subscription_status === 'active' && 
+                                     new Date(user.subscription_expires_at) > new Date()
+          
+          console.log('[NextAuth] Status da assinatura:', {
+            status: user.subscription_status,
+            expiresAt: user.subscription_expires_at,
+            isActive: isSubscriptionActive
+          })
           
           // Retornar dados do usuário
           console.log('[NextAuth] Autenticação bem-sucedida para:', user.email)

@@ -31,15 +31,22 @@ export async function GET() {
       SELECT EXISTS (
         SELECT FROM information_schema.tables 
         WHERE table_schema = 'public' 
-        AND table_name = 'app_users'
+        AND table_name = 'users'
       )
     `)
     
     // Contar usuários (sem expor dados sensíveis)
     let userCount = 0
+    let adminExists = false
     if (tableResult.rows[0].exists) {
-      const countResult = await client.query('SELECT COUNT(*) as count FROM app_users')
+      const countResult = await client.query('SELECT COUNT(*) as count FROM users')
       userCount = parseInt(countResult.rows[0].count)
+      
+      // Verificar se o admin existe
+      const adminResult = await client.query(
+        "SELECT EXISTS(SELECT 1 FROM users WHERE email = 'admin@cnpjntelligence.com')"
+      )
+      adminExists = adminResult.rows[0].exists
     }
     
     await client.end()
@@ -51,8 +58,9 @@ export async function GET() {
       database: {
         connected: true,
         currentTime: timeResult.rows[0].current_time,
-        appUsersTableExists: tableResult.rows[0].exists,
-        userCount: userCount
+        usersTableExists: tableResult.rows[0].exists,
+        userCount: userCount,
+        adminUserExists: adminExists
       },
       nextauth: {
         urlConfigured: !!process.env.NEXTAUTH_URL,
