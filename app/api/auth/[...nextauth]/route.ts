@@ -4,6 +4,19 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import { Client } from 'pg'
 import bcrypt from 'bcryptjs'
 
+// Verificação de variáveis críticas em produção
+if (process.env.NODE_ENV === 'production') {
+  const missingVars = []
+  if (!process.env.NEXTAUTH_SECRET) missingVars.push('NEXTAUTH_SECRET')
+  if (!process.env.NEXTAUTH_URL) missingVars.push('NEXTAUTH_URL')
+  if (!process.env.POSTGRES_URL) missingVars.push('POSTGRES_URL')
+  
+  if (missingVars.length > 0) {
+    console.error('[NextAuth] ERRO: Variáveis de ambiente ausentes:', missingVars)
+    throw new Error(`Variáveis de ambiente obrigatórias não definidas: ${missingVars.join(', ')}`)
+  }
+}
+
 export const authOptions: NextAuthOptions = {
   providers: [
     CredentialsProvider({
@@ -28,7 +41,9 @@ export const authOptions: NextAuthOptions = {
 
         const client = new Client({
           connectionString: process.env.POSTGRES_URL,
-          ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: true } : { rejectUnauthorized: false }
+          ssl: process.env.NODE_ENV === 'production' 
+            ? { rejectUnauthorized: false } // Importante: false para Supabase
+            : false
         })
 
         try {
@@ -117,8 +132,8 @@ export const authOptions: NextAuthOptions = {
     strategy: 'jwt',
     maxAge: 30 * 24 * 60 * 60, // 30 dias
   },
-  secret: process.env.NEXTAUTH_SECRET || process.env.SUPABASE_JWT_SECRET,
-  debug: process.env.NODE_ENV === 'development',
+  secret: process.env.NEXTAUTH_SECRET,
+  debug: true, // Temporariamente ativo para debug em produção
 }
 
 // Log de configuração (remover após resolver o problema)
